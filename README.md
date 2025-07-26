@@ -2,6 +2,77 @@
 
 Complete infrastructure-first setup for a Go CRUD application with EKS, OpenTelemetry, Prometheus, Grafana, and ArgoCD. Copy and paste commands in order.
 
+## 🌐 Network Architecture
+
+```mermaid
+graph TD
+    subgraph AWS_Cloud [AWS Cloud - us-west-2]
+        subgraph VPC [VPC - 10.0.0.0/16]
+            subgraph Public_Subnets [Public Subnets]
+                IGW[Internet Gateway]
+            end
+            
+            subgraph Private_Subnets [Private Subnets]
+                subgraph EKS_Cluster [EKS Cluster]
+                    subgraph Node_Group [EKS Node Group]
+                        Worker_Nodes[EKS Worker Nodes<br/>t3.medium instances]
+                    end
+                    
+                    subgraph Control_Plane [Control Plane]
+                        API_Server[Kubernetes API Server]
+                        ETCD[etcd]
+                    end
+                end
+                
+                subgraph Monitoring [Monitoring Namespace]
+                    Prometheus[Prometheus<br/>Metrics Collection]
+                    Grafana[Grafana<br/>Metrics Visualization]
+                end
+                
+                subgraph Tracing [Tracing Namespace]
+                    Tempo[Tempo<br/>Distributed Tracing]
+                end
+                
+                subgraph GitOps [ArgoCD Namespace]
+                    ArgoCD[ArgoCD<br/>GitOps Controller]
+                end
+            end
+            
+            NAT[NAT Gateway]
+        end
+    end
+    
+    subgraph External [External Services]
+        Internet[Internet Users]
+        GitHub[GitHub Repository]
+    end
+    
+    style VPC fill:#f9f,stroke:#333,stroke-width:2px
+    style Private_Subnets fill:#bbf,stroke:#333,stroke-width:1px
+    style Public_Subnets fill:#bfb,stroke:#333,stroke-width:1px
+    
+    classDef awsFill fill:#FF9900,stroke:#333,stroke-width:1px;
+    classDef k8sFill fill:#326ce5,stroke:#fff,stroke-width:1px,color:#fff;
+    classDef monitoringFill fill:#7928CA,stroke:#fff,stroke-width:1px,color:#fff;
+    classDef tracingFill fill:#FF4F8B,stroke:#fff,stroke-width:1px,color:#fff;
+    classDef gitopsFill fill:#EF7A08,stroke:#fff,stroke-width:1px,color:#fff;
+    
+    class Worker_Nodes,API_Server,ETCD k8sFill
+    class Prometheus,Grafana monitoringFill
+    class Tempo tracingFill
+    class ArgoCD gitopsFill
+    class IGW,NAT awsFill
+    
+    Internet --- IGW
+    IGW --- NAT
+    NAT --- Worker_Nodes
+    GitHub -.-> ArgoCD
+    ArgoCD ==> Prometheus & Grafana & Tempo
+    Worker_Nodes -.-> Prometheus
+    Worker_Nodes -.-> Tempo
+    Prometheus --- Grafana
+```
+
 ## 📋 Prerequisites Check
 
 ```bash
