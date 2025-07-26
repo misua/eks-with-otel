@@ -1,0 +1,97 @@
+# Grafana Tempo configuration for distributed tracing
+# This integrates seamlessly with Grafana and OpenTelemetry
+
+# Tempo configuration
+tempo:
+  # Retention settings
+  retention: 24h
+  
+  # Storage configuration
+  storage:
+    trace:
+      backend: local
+      local:
+        volume:
+          persistentVolumeClaim:
+            claimName: tempo-data
+  
+  # Query frontend configuration
+  queryFrontend:
+    enabled: true
+    replicas: 2
+  
+  # Compactor configuration
+  compactor:
+    enabled: true
+    replicas: 1
+  
+  # Distributor configuration
+  distributor:
+    enabled: true
+    replicas: 2
+  
+  # Ingester configuration
+  ingester:
+    enabled: true
+    replicas: 3
+  
+  # Storage settings
+  storage:
+    trace:
+      backend: s3
+      s3:
+        bucket: tempo-traces
+        endpoint: s3.amazonaws.com
+        region: us-west-2
+  
+  # Jaeger compatibility
+  distributor:
+    receivers:
+      jaeger:
+        protocols:
+          grpc:
+            enabled: true
+          thrift_http:
+            enabled: true
+          thrift_compact:
+            enabled: true
+      otlp:
+        protocols:
+          grpc:
+            enabled: true
+          http:
+            enabled: true
+  
+  # Resource limits
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 3100
+
+# Persistence configuration
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: gp2
+
+# Grafana integration
+grafana:
+  enabled: true
+  tempo:
+    datasource:
+      enabled: true
+
+# Monitoring configuration
+monitoring:
+  serviceMonitor:
+    enabled: true
+  prometheusRule:
+    enabled: true

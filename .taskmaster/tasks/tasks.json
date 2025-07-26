@@ -1,0 +1,1150 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Setup Simple Go Demo Application with Gin Framework",
+        "description": "Create a basic Go demo application using the Gin framework with in-memory storage to showcase the observability platform capabilities.",
+        "details": "1. Initialize a new Go module with `go mod init github.com/yourusername/eks-otel-demo`\n2. Add Gin framework dependency: `go get github.com/gin-gonic/gin@v1.9.1`\n3. Create a simple project structure:\n   - `/cmd/api`: Main application entry point\n   - `/internal/api`: Basic API handlers\n   - `/internal/models`: Simple data model\n   - `/internal/storage`: In-memory storage implementation\n4. Implement basic CRUD endpoints for a single resource (e.g., 'items'):\n   - POST /api/v1/items - Create\n   - GET /api/v1/items - List all\n   - GET /api/v1/items/:id - Get one\n   - PUT /api/v1/items/:id - Update\n   - DELETE /api/v1/items/:id - Delete\n5. Add a simple README.md with setup instructions",
+        "testStrategy": "1. Write basic unit tests for the storage layer\n2. Create simple API tests using httptest package\n3. Test happy path scenarios for each endpoint\n4. Verify proper HTTP status codes and response formats",
+        "priority": "low",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Go Project Structure",
+            "description": "Set up the Go module and create the basic project directory structure",
+            "dependencies": [],
+            "details": "1. Initialize a new Go module with `go mod init github.com/yourusername/eks-otel-demo`\n2. Add Gin framework dependency: `go get github.com/gin-gonic/gin@v1.9.1`\n3. Create a simple project directory structure:\n   - `/cmd/api`: Main application entry point\n   - `/internal/api`: Basic API handlers\n   - `/internal/models`: Simple data model\n   - `/internal/storage`: In-memory storage implementation\n4. Create a basic main.go file in `/cmd/api` that initializes the Gin router",
+            "status": "pending",
+            "testStrategy": "1. Verify that the Go module is correctly initialized\n2. Ensure the Gin dependency is properly installed\n3. Check that the directory structure is created"
+          },
+          {
+            "id": 2,
+            "title": "Implement Simple Data Model and Storage",
+            "description": "Create a basic data model and in-memory storage implementation",
+            "dependencies": [],
+            "details": "1. Define a simple Item struct in `/internal/models` with fields like ID, Name, and CreatedAt\n2. Implement a basic in-memory storage using a map with simple CRUD operations\n3. Add basic error handling for not found items",
+            "status": "pending",
+            "testStrategy": "1. Write simple unit tests for the storage implementation\n2. Test basic CRUD operations\n3. Test edge cases like empty storage and not found scenarios"
+          },
+          {
+            "id": 3,
+            "title": "Develop Basic API Handlers and Routes",
+            "description": "Create simple API handlers for CRUD operations and set up the routes",
+            "dependencies": [],
+            "details": "1. Create handler functions in `/internal/api` for each CRUD operation\n2. Implement basic request validation\n3. Set up error responses with appropriate HTTP status codes\n4. Configure the following routes in the main application:\n   - POST /api/v1/items - Create\n   - GET /api/v1/items - List all\n   - GET /api/v1/items/:id - Get one\n   - PUT /api/v1/items/:id - Update\n   - DELETE /api/v1/items/:id - Delete",
+            "status": "pending",
+            "testStrategy": "1. Test each handler using httptest package\n2. Verify proper HTTP status codes and response formats\n3. Test basic validation scenarios"
+          },
+          {
+            "id": 4,
+            "title": "Add Basic Error Handling",
+            "description": "Implement simple error responses for the API",
+            "dependencies": [],
+            "details": "1. Create a basic error response structure\n2. Implement middleware for request logging\n3. Add middleware for panic recovery\n4. Ensure all API endpoints return consistent error formats\n5. Add appropriate HTTP status codes for different error scenarios",
+            "status": "pending",
+            "testStrategy": "1. Test error responses with invalid requests\n2. Verify error format consistency\n3. Test recovery middleware with intentional panics"
+          },
+          {
+            "id": 5,
+            "title": "Create Simple Documentation",
+            "description": "Set up basic documentation for the demo application",
+            "dependencies": [],
+            "details": "1. Create a README.md with:\n   - Project overview\n   - Setup instructions\n   - API endpoint descriptions\n   - Examples of how to use the API\n2. Add comments to the code for better understanding",
+            "status": "pending",
+            "testStrategy": "1. Review documentation for clarity\n2. Ensure setup instructions work correctly\n3. Verify API endpoint descriptions match implementation"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Add Basic Health Checks and Graceful Shutdown",
+        "description": "Implement simple health check endpoints and basic graceful shutdown for the demo application.",
+        "details": "1. Add basic health check endpoints:\n   - GET /health/live - Liveness probe that returns 200 OK if the server is running\n   - GET /health/ready - Readiness probe that returns 200 OK\n2. Implement simple graceful shutdown:\n   - Capture OS signals (SIGTERM, SIGINT) using signal.Notify\n   - Add a basic shutdown timeout (e.g., 5 seconds)\n   - Log shutdown events",
+        "testStrategy": "1. Test health check endpoints with simple HTTP requests\n2. Verify graceful shutdown with basic tests\n3. Check that the application responds to OS signals",
+        "priority": "low",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Basic Health Check Endpoints",
+            "description": "Implement simple health check endpoints for the demo application",
+            "dependencies": [],
+            "details": "Create two simple health check endpoints:\n1. GET /health/live - Returns 200 OK if the server is running\n2. GET /health/ready - Returns 200 OK to indicate the application is ready to serve traffic",
+            "status": "pending",
+            "testStrategy": "Test both health check endpoints with HTTP requests and verify they return 200 OK status codes"
+          },
+          {
+            "id": 2,
+            "title": "Implement Basic Signal Handling",
+            "description": "Set up simple signal capture for graceful application termination",
+            "dependencies": [],
+            "details": "Implement basic signal handling using signal.Notify to capture SIGTERM and SIGINT signals. Create a channel to receive these signals and set up a goroutine to monitor for shutdown signals.",
+            "status": "pending",
+            "testStrategy": "Test that the application correctly captures and responds to termination signals"
+          },
+          {
+            "id": 3,
+            "title": "Add Simple Shutdown Logic",
+            "description": "Implement basic server shutdown with timeout",
+            "dependencies": [
+              "2.2"
+            ],
+            "details": "Add simple server shutdown logic with a basic timeout (e.g., 5 seconds) to allow in-flight requests to complete. Log shutdown events for visibility.",
+            "status": "pending",
+            "testStrategy": "Verify that the server shuts down gracefully when receiving termination signals"
+          },
+          {
+            "id": 4,
+            "title": "Add Basic Configuration",
+            "description": "Implement simple configuration for shutdown behavior",
+            "dependencies": [
+              "2.1",
+              "2.3"
+            ],
+            "details": "Add basic configuration options for shutdown timeout via environment variables. Create sensible defaults and document the available options.",
+            "status": "pending",
+            "testStrategy": "Test configuration loading with different environment variable values and verify defaults are used when configuration is not provided"
+          },
+          {
+            "id": 5,
+            "title": "Ensure Clean Shutdown",
+            "description": "Verify all resources are properly released during shutdown",
+            "dependencies": [
+              "2.3"
+            ],
+            "details": "Ensure that all resources are properly released during application shutdown. Add logging for shutdown events to aid in debugging.",
+            "status": "pending",
+            "testStrategy": "Test shutdown behavior to ensure resources are properly released"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Add OpenTelemetry Instrumentation to Demo App",
+        "description": "Integrate OpenTelemetry for basic distributed tracing and metrics in the demo application to showcase the observability platform.",
+        "details": "1. Add OpenTelemetry dependencies:\n   - `go get go.opentelemetry.io/otel@v1.19.0`\n   - `go get go.opentelemetry.io/otel/trace@v1.19.0`\n   - `go get go.opentelemetry.io/otel/sdk@v1.19.0`\n   - `go get go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc@v1.19.0`\n   - `go get go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin@v0.45.0`\n2. Create a simple telemetry package in `/internal/telemetry`\n3. Configure the OTLP exporter to send telemetry data to the collector\n4. Add middleware to instrument Gin routes with otelgin\n5. Add basic span creation for key operations\n6. Make telemetry configurable via environment variables",
+        "testStrategy": "1. Verify spans are created for API requests\n2. Check that spans are exported to the collector\n3. Test basic configuration options",
+        "priority": "low",
+        "dependencies": [
+          1,
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up OpenTelemetry dependencies",
+            "description": "Add required OpenTelemetry packages and create a basic telemetry package",
+            "dependencies": [],
+            "details": "1. Add required OpenTelemetry dependencies using go get commands\n2. Create a simple `/internal/telemetry` package\n3. Implement basic initialization function for OpenTelemetry\n4. Configure the OTLP exporter to send telemetry data to the collector",
+            "status": "pending",
+            "testStrategy": "Verify that the telemetry package initializes correctly and can connect to the collector"
+          },
+          {
+            "id": 2,
+            "title": "Implement Gin middleware for tracing",
+            "description": "Add middleware to instrument Gin routes with OpenTelemetry tracing",
+            "dependencies": [
+              "3.1"
+            ],
+            "details": "1. Integrate otelgin middleware with the Gin router\n2. Configure the middleware to extract and propagate trace context\n3. Set up basic span attributes for HTTP requests",
+            "status": "pending",
+            "testStrategy": "Verify that spans are created for HTTP requests and contain basic attributes"
+          },
+          {
+            "id": 3,
+            "title": "Add basic custom instrumentation",
+            "description": "Implement simple custom span creation for key operations",
+            "dependencies": [
+              "3.1",
+              "3.2"
+            ],
+            "details": "1. Create helper functions for creating and managing custom spans\n2. Add instrumentation for storage operations\n3. Implement basic error recording in spans",
+            "status": "pending",
+            "testStrategy": "Test that custom spans are created for key operations and errors are properly recorded"
+          },
+          {
+            "id": 4,
+            "title": "Add simple metrics",
+            "description": "Implement basic metrics for the demo application",
+            "dependencies": [
+              "3.1"
+            ],
+            "details": "1. Set up OpenTelemetry metrics provider\n2. Create basic counters for API requests\n3. Implement simple histograms for operation durations",
+            "status": "pending",
+            "testStrategy": "Verify that metrics are recorded and exported to the collector"
+          },
+          {
+            "id": 5,
+            "title": "Make telemetry configurable",
+            "description": "Implement basic configuration options for telemetry",
+            "dependencies": [
+              "3.1",
+              "3.2",
+              "3.3",
+              "3.4"
+            ],
+            "details": "1. Create simple configuration options for enabling/disabling telemetry\n2. Add environment variables for configuring the collector endpoint\n3. Document configuration options in README",
+            "status": "pending",
+            "testStrategy": "Test configuration options by setting different environment variables and verifying behavior changes"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Add Basic Structured Logging to Demo App",
+        "description": "Implement simple structured logging with correlation IDs in the demo application to showcase the observability platform.",
+        "details": "1. Add structured logging dependency:\n   - `go get github.com/rs/zerolog@v1.31.0`\n2. Create a basic logging package in `/internal/logger`\n3. Configure zerolog with JSON output format\n4. Add trace IDs to log entries when available\n5. Create simple helper functions for logging at different levels\n6. Add basic request ID generation\n7. Configure log level via environment variable",
+        "testStrategy": "1. Verify log output format\n2. Check that trace IDs are included in logs when available\n3. Test log level configuration",
+        "priority": "low",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up basic structured logging",
+            "description": "Create a simple logging package with zerolog",
+            "dependencies": [],
+            "details": "1. Add zerolog dependency with `go get github.com/rs/zerolog@v1.31.0`\n2. Create a basic logging package in `/internal/logger`\n3. Configure JSON output format\n4. Implement environment variable configuration for log level",
+            "status": "pending",
+            "testStrategy": "Verify logger initialization and check that log level configuration works"
+          },
+          {
+            "id": 2,
+            "title": "Implement correlation ID handling",
+            "description": "Add basic trace ID extraction and request ID generation",
+            "dependencies": [
+              "4.1"
+            ],
+            "details": "1. Implement simple middleware to extract trace IDs from OpenTelemetry context\n2. Add basic request ID generation for requests without trace context\n3. Create helper functions to access trace and request IDs",
+            "status": "pending",
+            "testStrategy": "Test trace ID extraction and request ID generation functionality"
+          },
+          {
+            "id": 3,
+            "title": "Create logging helper functions",
+            "description": "Implement simple logging functions with correlation IDs",
+            "dependencies": [
+              "4.1",
+              "4.2"
+            ],
+            "details": "1. Create basic helper functions for logging at different levels (debug, info, warn, error)\n2. Implement context-aware logging functions that include trace information when available\n3. Ensure consistent log structure across all log entries",
+            "status": "pending",
+            "testStrategy": "Test each logging function and verify trace IDs are included when available"
+          },
+          {
+            "id": 4,
+            "title": "Add simple Gin logger middleware",
+            "description": "Create a basic Gin middleware that uses the structured logger",
+            "dependencies": [
+              "4.3"
+            ],
+            "details": "1. Implement a simple Gin logger middleware that uses the structured logger\n2. Include basic request details (method, path, status code, latency)\n3. Add correlation IDs to request logs when available",
+            "status": "pending",
+            "testStrategy": "Test the middleware with sample requests and verify logs contain request details and correlation IDs"
+          },
+          {
+            "id": 5,
+            "title": "Update code to use structured logging",
+            "description": "Replace print statements with structured logging calls",
+            "dependencies": [
+              "4.3",
+              "4.4"
+            ],
+            "details": "1. Replace any existing log statements with structured logging calls\n2. Add component/module field to distinguish log sources\n3. Document logging usage in README",
+            "status": "pending",
+            "testStrategy": "Verify all components use structured logging and logs include relevant context"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Create Simple Dockerfile for Demo App",
+        "description": "Develop a basic multi-stage Dockerfile for the demo application.",
+        "details": "1. Create a simple multi-stage Dockerfile:\n   - Stage 1: Use golang:1.21-alpine as the build image\n   - Stage 2: Use alpine:3.18 as the runtime image\n2. In the build stage:\n   - Copy go.mod and go.sum files\n   - Build the application with basic optimization flags\n3. In the runtime stage:\n   - Create a non-root user\n   - Copy only the compiled binary\n   - Set the user to the non-root user\n4. Add a basic health check\n5. Configure proper ENTRYPOINT and CMD\n6. Add a simple .dockerignore file",
+        "testStrategy": "1. Build the Docker image and verify it runs correctly\n2. Test the health check functionality\n3. Check that the application runs as a non-root user",
+        "priority": "low",
+        "dependencies": [
+          1,
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Basic Dockerfile Structure",
+            "description": "Set up a simple multi-stage Dockerfile for the demo application",
+            "dependencies": [],
+            "details": "Create a Dockerfile with two stages: build stage using golang:1.21-alpine and runtime stage using alpine:3.18. Set up basic Go environment variables in the build stage. Create a non-root user in the runtime stage with 'adduser -D -u 10001 appuser'. Add simple ENTRYPOINT and CMD directives.",
+            "status": "pending",
+            "testStrategy": "Verify the Dockerfile syntax with 'docker build --dry-run'"
+          },
+          {
+            "id": 2,
+            "title": "Implement Build Stage",
+            "description": "Configure the build stage for the demo application",
+            "dependencies": [
+              "5.1"
+            ],
+            "details": "Copy go.mod and go.sum files first for better caching. Configure a basic Go build command with optimization flags: 'CGO_ENABLED=0 GOOS=linux go build -o /app/server ./cmd/api'.",
+            "status": "pending",
+            "testStrategy": "Build the image and verify that the application compiles correctly"
+          },
+          {
+            "id": 3,
+            "title": "Configure Runtime Stage",
+            "description": "Set up the runtime stage with basic security practices",
+            "dependencies": [
+              "5.1",
+              "5.2"
+            ],
+            "details": "Copy only the compiled binary from the build stage to the runtime stage. Set proper file permissions. Configure the container to run as the non-root user with 'USER appuser'.",
+            "status": "pending",
+            "testStrategy": "Run the container and verify it operates as the non-root user"
+          },
+          {
+            "id": 4,
+            "title": "Add Health Check and Metadata",
+            "description": "Implement a basic Docker health check",
+            "dependencies": [
+              "5.3"
+            ],
+            "details": "Add a simple Docker health check with 'HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://localhost:8080/health/live || exit 1'. Create a basic .dockerignore file to exclude unnecessary files.",
+            "status": "pending",
+            "testStrategy": "Run the container and test the health check functionality"
+          },
+          {
+            "id": 5,
+            "title": "Create Docker Compose File",
+            "description": "Set up a simple Docker Compose file for local development",
+            "dependencies": [
+              "5.4"
+            ],
+            "details": "Create a basic docker-compose.yml file for local development that includes the demo application. Configure appropriate environment variables and ports.",
+            "status": "pending",
+            "testStrategy": "Test the Docker Compose setup by running the application locally"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Add Simple In-Memory Storage for Demo App",
+        "description": "Implement a basic in-memory storage solution for the demo application.",
+        "details": "1. Create a simple storage interface in `/internal/storage/storage.go`\n2. Implement a basic in-memory storage provider using a map\n3. Add simple CRUD operations (Create, Read, Update, Delete, List)\n4. Implement basic error handling for not found items\n5. Add a feature flag to enable/disable persistence (defaulting to in-memory)",
+        "testStrategy": "1. Write basic unit tests for the storage implementation\n2. Test CRUD operations\n3. Verify error handling for not found scenarios",
+        "priority": "low",
+        "dependencies": [
+          1,
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Storage Interface",
+            "description": "Implement a simple storage interface for the demo application",
+            "dependencies": [],
+            "details": "1. Create a basic storage interface in `/internal/storage/storage.go` that defines simple CRUD operations\n2. Add appropriate documentation for the interface methods",
+            "status": "pending",
+            "testStrategy": "Review interface design to ensure it covers basic CRUD operations"
+          },
+          {
+            "id": 2,
+            "title": "Implement In-Memory Storage",
+            "description": "Create a simple in-memory storage implementation",
+            "dependencies": [
+              "6.1"
+            ],
+            "details": "1. Implement the in-memory storage using a map\n2. Add mutex for basic thread safety\n3. Implement proper error handling for basic scenarios like not found items",
+            "status": "pending",
+            "testStrategy": "Write unit tests for the in-memory implementation and test basic CRUD operations"
+          },
+          {
+            "id": 3,
+            "title": "Add Data Initialization",
+            "description": "Implement sample data initialization for demo purposes",
+            "dependencies": [
+              "6.2"
+            ],
+            "details": "1. Create a function to initialize the storage with sample data\n2. Add configuration option to enable/disable sample data initialization\n3. Ensure initialization happens only once at startup",
+            "status": "pending",
+            "testStrategy": "Verify sample data is correctly initialized when the option is enabled"
+          },
+          {
+            "id": 4,
+            "title": "Implement Basic Configuration",
+            "description": "Add simple configuration options for storage",
+            "dependencies": [
+              "6.2",
+              "6.3"
+            ],
+            "details": "1. Add a feature flag to enable/disable persistence (defaulting to in-memory)\n2. Implement environment variable configuration for storage options\n3. Document storage configuration options",
+            "status": "pending",
+            "testStrategy": "Test configuration loading from environment variables and verify defaults are used when not provided"
+          },
+          {
+            "id": 5,
+            "title": "Add Basic Observability",
+            "description": "Implement simple observability for storage operations",
+            "dependencies": [
+              "6.1",
+              "6.2"
+            ],
+            "details": "1. Add basic logging for storage operations\n2. Implement simple spans for storage operations when OpenTelemetry is available\n3. Add basic metrics for storage operations (counts, durations)",
+            "status": "pending",
+            "testStrategy": "Verify logs, spans, and metrics are created for storage operations"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Setup Simple CI Pipeline for Demo App",
+        "description": "Create a basic GitHub Actions workflow for building and testing the demo application.",
+        "details": "1. Create `.github/workflows/ci.yml` for continuous integration:\n   - Trigger on push to main and pull requests\n   - Set up Go environment\n   - Run basic linting\n   - Run unit tests\n   - Build the application\n   - Build Docker image\n2. Add status badge to README.md",
+        "testStrategy": "1. Test the CI workflow with a sample pull request\n2. Verify that linting and tests run correctly\n3. Check that the application builds successfully\n4. Verify Docker image builds correctly",
+        "priority": "low",
+        "dependencies": [
+          5
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Basic CI Workflow",
+            "description": "Develop a simple GitHub Actions workflow file for continuous integration",
+            "dependencies": [],
+            "details": "Create `.github/workflows/ci.yml` with the following configurations:\n- Set triggers for push to main branch and pull requests\n- Configure Go environment setup\n- Add steps for running basic linting\n- Configure unit test execution\n- Set up application build process\n- Add Docker image building",
+            "status": "pending",
+            "testStrategy": "Create a test branch with sample code changes and open a pull request to verify the CI workflow triggers correctly"
+          },
+          {
+            "id": 2,
+            "title": "Add Docker Image Building",
+            "description": "Configure Docker image building in the CI workflow",
+            "dependencies": [
+              "7.1"
+            ],
+            "details": "Add steps to the CI workflow to:\n- Build Docker image using the Dockerfile\n- Tag the image with the commit SHA\n- Optionally push to a container registry for testing",
+            "status": "pending",
+            "testStrategy": "Verify Docker image builds successfully in the CI workflow"
+          },
+          {
+            "id": 3,
+            "title": "Implement Basic Testing",
+            "description": "Add test execution to the CI workflow",
+            "dependencies": [
+              "7.1"
+            ],
+            "details": "Configure the CI workflow to:\n- Run unit tests\n- Generate basic test coverage report\n- Fail the workflow if tests fail",
+            "status": "pending",
+            "testStrategy": "Create tests that pass and fail to verify the workflow behaves correctly"
+          },
+          {
+            "id": 4,
+            "title": "Add Status Badge",
+            "description": "Add CI status badge to the README.md",
+            "dependencies": [
+              "7.1"
+            ],
+            "details": "Add GitHub Actions workflow status badge to the README.md file to show the current build status of the main branch",
+            "status": "pending",
+            "testStrategy": "Verify the status badge appears correctly in the README"
+          },
+          {
+            "id": 5,
+            "title": "Document CI Process",
+            "description": "Add documentation about the CI process",
+            "dependencies": [
+              "7.1",
+              "7.2",
+              "7.3",
+              "7.4"
+            ],
+            "details": "Add a section to the README.md that explains:\n- How the CI process works\n- What is being tested and built\n- How to view and troubleshoot CI results",
+            "status": "pending",
+            "testStrategy": "Review documentation for clarity and completeness"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Create Basic Kubernetes Manifests for Demo App",
+        "description": "Develop simple Kubernetes manifests for deploying the demo application to the EKS cluster.",
+        "details": "1. Create a `/k8s` directory with basic manifests:\n   - Deployment with appropriate labels\n   - Service for accessing the application\n   - ConfigMap for basic configuration\n2. Configure liveness and readiness probes\n3. Set up non-root user security context\n4. Add appropriate annotations for Prometheus scraping",
+        "testStrategy": "1. Validate manifests with kubectl\n2. Test deployment in the EKS cluster\n3. Verify that probes work correctly\n4. Check that Prometheus can scrape metrics",
+        "priority": "low",
+        "dependencies": [
+          5,
+          6
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create basic Kubernetes manifests",
+            "description": "Set up essential Kubernetes manifests for the demo application",
+            "dependencies": [],
+            "details": "1. Create a `/k8s` directory\n2. Create basic manifests:\n   - Deployment with appropriate labels and selectors\n   - Service for accessing the application\n   - ConfigMap for basic configuration",
+            "status": "pending",
+            "testStrategy": "Validate manifests with kubectl and check for syntax errors"
+          },
+          {
+            "id": 2,
+            "title": "Configure health probes",
+            "description": "Implement liveness and readiness probes in the Kubernetes manifests",
+            "dependencies": [
+              "8.1"
+            ],
+            "details": "1. Configure liveness probe using the /health/live endpoint\n2. Set up readiness probe using the /health/ready endpoint\n3. Configure appropriate initial delay and period settings",
+            "status": "pending",
+            "testStrategy": "Deploy to the EKS cluster and verify that probes work correctly"
+          },
+          {
+            "id": 3,
+            "title": "Implement basic security",
+            "description": "Add simple security configurations to the Kubernetes manifests",
+            "dependencies": [
+              "8.1"
+            ],
+            "details": "1. Set up non-root user security context\n2. Configure read-only root filesystem where possible\n3. Add resource limits and requests",
+            "status": "pending",
+            "testStrategy": "Deploy to the EKS cluster and verify security settings are applied"
+          },
+          {
+            "id": 4,
+            "title": "Add observability configurations",
+            "description": "Configure Kubernetes manifests for observability integration",
+            "dependencies": [
+              "8.1",
+              "8.2",
+              "8.3"
+            ],
+            "details": "1. Add appropriate annotations for Prometheus scraping\n2. Configure environment variables for OpenTelemetry\n3. Set up appropriate labels for service discovery",
+            "status": "pending",
+            "testStrategy": "Verify that Prometheus can discover and scrape metrics from the application"
+          },
+          {
+            "id": 5,
+            "title": "Create deployment documentation",
+            "description": "Document how to deploy the application to the EKS cluster",
+            "dependencies": [
+              "8.1",
+              "8.2",
+              "8.3",
+              "8.4"
+            ],
+            "details": "1. Add deployment instructions to the README.md\n2. Document environment variables and configuration options\n3. Add troubleshooting tips for common issues",
+            "status": "pending",
+            "testStrategy": "Follow the documentation to deploy the application and verify it works as expected"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Setup ArgoCD for GitOps Deployment",
+        "description": "Configure ArgoCD for automated deployment of the application using GitOps principles. This is a critical infrastructure component that needs to be set up before application development to provide a deployment target.",
+        "status": "completed",
+        "dependencies": [
+          7,
+          8
+        ],
+        "priority": "high",
+        "details": "1. Create a separate GitOps repository for infrastructure\n2. Set up ArgoCD Application manifests in `/argocd` directory\n3. Configure application sets for multi-environment deployments\n4. Set up sync policies with automated pruning and self-healing\n5. Configure health checks and resource tracking\n6. Set up notifications for sync events\n7. Configure RBAC for ArgoCD access\n8. Set up webhook integration with GitHub\n9. Configure progressive delivery with analysis templates\n10. Set up rollback triggers based on metrics\n11. Create ApplicationSet for deploying to multiple environments\n12. Configure sync windows for controlled deployments\n13. Ensure ArgoCD is properly installed and configured on the EKS cluster as a deployment target",
+        "testStrategy": "1. Test ArgoCD application deployment in a test environment\n2. Verify sync behavior and automated healing\n3. Test rollback functionality\n4. Verify webhook integration\n5. Test progressive delivery with canary deployments\n6. Verify RBAC permissions\n7. Validate ArgoCD as a deployment target for application components",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create GitOps Repository and ArgoCD Application Manifests",
+            "description": "Set up a dedicated GitOps repository and create ArgoCD application manifests in the /argocd directory",
+            "status": "completed",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Configure ApplicationSets for Multi-Environment Deployments",
+            "description": "Implement ApplicationSets to manage deployments across multiple environments with templating",
+            "status": "completed",
+            "dependencies": [
+              1
+            ],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Sync Policies with Automated Healing",
+            "description": "Configure sync policies with automated pruning, self-healing, and health checks",
+            "status": "completed",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Set Up Progressive Delivery and Rollbacks",
+            "description": "Configure progressive delivery with analysis templates and metric-based rollback triggers",
+            "status": "completed",
+            "dependencies": [
+              3
+            ],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Configure RBAC and Notifications",
+            "description": "Set up role-based access control for ArgoCD and configure notifications for sync events",
+            "status": "completed",
+            "dependencies": [
+              1,
+              3
+            ],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Validate ArgoCD as Deployment Target for Application Components",
+            "description": "Ensure ArgoCD is properly configured to serve as a deployment target for application components before application development begins",
+            "status": "completed",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Setup EKS Cluster with Terraform",
+        "description": "Create Terraform configuration for provisioning a production-ready EKS cluster with proper networking and security.",
+        "details": "1. Create a `/terraform` directory with modules:\n   - VPC with public and private subnets\n   - EKS cluster with managed node groups\n   - IAM roles and policies\n   - Security groups\n   - EBS CSI driver\n2. Configure node groups with auto-scaling:\n   - Use the latest Amazon EKS optimized AMI\n   - Configure mixed instance types for cost optimization\n   - Set up spot instances for non-critical workloads\n3. Set up proper IAM roles for service accounts (IRSA)\n4. Configure cluster autoscaler\n5. Set up VPC CNI with custom networking\n6. Configure AWS Load Balancer Controller\n7. Set up CloudWatch logging\n8. Configure cluster security groups\n9. Set up private endpoint access\n10. Configure node group update strategy\n11. Set up tagging strategy for cost allocation\n12. Configure multi-AZ deployment for high availability",
+        "testStrategy": "1. Validate Terraform configuration with terraform validate\n2. Run terraform plan to check for potential issues\n3. Apply configuration in a test AWS account\n4. Verify cluster functionality with kubectl\n5. Test node group auto-scaling\n6. Verify IAM roles and permissions\n7. Test cluster upgrades",
+        "priority": "high",
+        "dependencies": [],
+        "status": "completed",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create VPC and Networking Infrastructure",
+            "description": "Set up the VPC module with public and private subnets across multiple availability zones for high availability.",
+            "dependencies": [],
+            "details": "Create a Terraform module for VPC with the following components:\n- Public and private subnets across 3 AZs\n- NAT gateways for private subnet internet access\n- Internet Gateway for public subnets\n- Route tables and associations\n- VPC endpoints for AWS services\n- Network ACLs with appropriate rules\n- Configure CIDR blocks for optimal IP allocation",
+            "status": "completed",
+            "testStrategy": "Run terraform validate and terraform plan to verify configuration\nCheck for proper subnet distribution across AZs\nVerify NAT gateway configuration\nEnsure route tables are properly associated\nTest connectivity between subnets"
+          },
+          {
+            "id": 2,
+            "title": "Configure EKS Cluster and Node Groups",
+            "description": "Create the EKS cluster with managed node groups, including auto-scaling configuration and instance type optimization.",
+            "dependencies": [
+              "10.1"
+            ],
+            "details": "Develop Terraform configuration for:\n- EKS cluster with version 1.27 or newer\n- Managed node groups with mixed instance types\n- Auto-scaling configuration based on CPU/memory metrics\n- Spot instances for non-critical workloads\n- Latest Amazon EKS optimized AMI\n- Node group update strategy with proper max unavailable settings\n- Multi-AZ deployment for high availability\n- Tagging strategy for cost allocation",
+            "status": "completed",
+            "testStrategy": "Verify cluster creation with kubectl\nTest node group auto-scaling by deploying test workloads\nVerify spot instances are properly configured\nCheck that nodes are distributed across AZs\nTest node group updates with minimal disruption"
+          },
+          {
+            "id": 3,
+            "title": "Implement IAM Roles and Security Groups",
+            "description": "Set up IAM roles, policies, and security groups for the EKS cluster and node groups with least privilege principles.",
+            "dependencies": [
+              "10.1",
+              "10.2"
+            ],
+            "details": "Configure the following security components:\n- IAM roles for the EKS cluster with least privilege\n- IAM roles for node groups with necessary permissions\n- IAM roles for service accounts (IRSA) for pod-level permissions\n- Security groups for cluster control plane\n- Security groups for worker nodes with appropriate ingress/egress rules\n- Private endpoint access configuration\n- KMS encryption for secrets\n- Service account token volume projection",
+            "status": "completed",
+            "testStrategy": "Validate IAM role permissions using IAM Access Analyzer\nTest IRSA functionality with sample workloads\nVerify security group rules are properly applied\nEnsure private endpoint access works correctly\nTest cross-account access if applicable"
+          },
+          {
+            "id": 4,
+            "title": "Set up EKS Add-ons and Controllers",
+            "description": "Configure essential EKS add-ons including EBS CSI driver, cluster autoscaler, VPC CNI, and AWS Load Balancer Controller.",
+            "dependencies": [
+              "10.2",
+              "10.3"
+            ],
+            "details": "Implement Terraform configuration for:\n- EBS CSI driver for persistent volume support\n- Cluster autoscaler for automatic node scaling\n- VPC CNI with custom networking and prefix delegation\n- AWS Load Balancer Controller for ALB/NLB integration\n- CoreDNS configuration\n- kube-proxy settings\n- Container Insights for monitoring\n- Proper version pinning for all add-ons",
+            "status": "completed",
+            "testStrategy": "Verify add-ons are properly installed and running\nTest EBS volume provisioning\nVerify cluster autoscaler scales nodes as expected\nTest ALB/NLB creation with sample services\nCheck custom networking functionality with VPC CNI"
+          },
+          {
+            "id": 5,
+            "title": "Configure Monitoring, Logging and Maintenance",
+            "description": "Set up CloudWatch logging, monitoring, and maintenance configurations for the EKS cluster.",
+            "dependencies": [
+              "10.2",
+              "10.4"
+            ],
+            "details": "Implement the following operational components:\n- CloudWatch logging for control plane and worker nodes\n- CloudWatch alarms for critical metrics\n- Log retention policies\n- Cluster upgrade strategy\n- Node group maintenance windows\n- Backup and disaster recovery configuration\n- Cost optimization recommendations\n- Resource tagging for billing allocation\n- Implement maintenance window configurations",
+            "status": "completed",
+            "testStrategy": "Verify logs are properly sent to CloudWatch\nTest log queries and insights\nVerify alarms trigger correctly\nSimulate cluster upgrade process\nTest disaster recovery procedures\nVerify cost allocation tags are applied correctly"
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Deploy OpenTelemetry Collector",
+        "description": "Set up and configure the OpenTelemetry Collector in the EKS cluster for telemetry data collection and processing.",
+        "details": "1. Create Kubernetes manifests for OpenTelemetry Collector:\n   - Deployment or DaemonSet based on requirements\n   - ConfigMap for collector configuration\n   - Service for collector endpoints\n   - ServiceAccount with proper permissions\n2. Configure collector pipeline:\n   - Receivers for OTLP (gRPC and HTTP)\n   - Processors for batch processing and sampling\n   - Exporters for Prometheus, Jaeger, and logging\n3. Set up collector with proper resource limits\n4. Configure TLS for secure communication\n5. Set up metrics collection from Kubernetes API server\n6. Configure pod monitoring with k8s_cluster receiver\n7. Set up host metrics collection\n8. Configure tail sampling for high-volume environments\n9. Set up health checks and monitoring for the collector itself\n10. Configure high availability deployment",
+        "testStrategy": "1. Validate collector configuration\n2. Deploy to a test environment\n3. Verify telemetry data collection\n4. Test different receiver configurations\n5. Verify exporter functionality\n6. Test performance under load\n7. Verify TLS configuration",
+        "priority": "high",
+        "dependencies": [
+          3,
+          10
+        ],
+        "status": "completed",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Kubernetes manifests for OpenTelemetry Collector",
+            "description": "Develop the necessary Kubernetes manifests to deploy the OpenTelemetry Collector in the EKS cluster",
+            "dependencies": [],
+            "details": "Create YAML manifests for: 1) Deployment or DaemonSet based on collection requirements, 2) ConfigMap containing the collector configuration, 3) Service to expose collector endpoints, 4) ServiceAccount with appropriate RBAC permissions for accessing Kubernetes resources, 5) Namespace if deploying to a dedicated namespace",
+            "status": "completed",
+            "testStrategy": "Validate the manifests using kubectl with --dry-run=client, verify RBAC permissions are correctly defined, and ensure all required resources are properly configured"
+          },
+          {
+            "id": 2,
+            "title": "Configure OpenTelemetry Collector pipeline",
+            "description": "Set up the collector's data processing pipeline with appropriate receivers, processors, and exporters",
+            "dependencies": [
+              "11.1"
+            ],
+            "details": "Configure the collector pipeline in the ConfigMap with: 1) Receivers for OTLP (gRPC and HTTP), Prometheus metrics, and Kubernetes API server, 2) Processors for batch processing, memory limiter, and tail sampling for high-volume environments, 3) Exporters for Prometheus, Jaeger, and logging backends, 4) Service pipelines connecting receivers, processors, and exporters",
+            "status": "completed",
+            "testStrategy": "Test the configuration with otelcol --config=file validate command before deployment, verify telemetry data flows through the pipeline correctly"
+          },
+          {
+            "id": 3,
+            "title": "Implement resource management and security",
+            "description": "Configure resource limits, security contexts, and TLS for secure collector operation",
+            "dependencies": [
+              "11.1",
+              "11.2"
+            ],
+            "details": "1) Set appropriate CPU and memory requests/limits in the Deployment/DaemonSet, 2) Configure the memory limiter processor to prevent OOM situations, 3) Implement TLS for secure communication between applications and the collector, 4) Set up proper security contexts to run with minimal privileges, 5) Configure network policies to restrict traffic to/from the collector",
+            "status": "completed",
+            "testStrategy": "Test resource limits under load to ensure collector stability, verify TLS configuration with openssl, and confirm security contexts are properly applied"
+          },
+          {
+            "id": 4,
+            "title": "Set up metrics collection from Kubernetes",
+            "description": "Configure the collector to gather metrics from Kubernetes components and host systems",
+            "dependencies": [
+              "11.2",
+              "11.3"
+            ],
+            "details": "1) Configure k8s_cluster receiver for pod and node metrics, 2) Set up kubeletstats receiver for detailed node metrics, 3) Implement hostmetrics receiver for system-level metrics (CPU, memory, disk, network), 4) Configure filtering to reduce unnecessary data collection, 5) Set up appropriate scrape intervals based on metric importance",
+            "status": "completed",
+            "testStrategy": "Verify metrics collection from Kubernetes API server, kubelet, and host systems, check that metrics appear in Prometheus with correct labels and values"
+          },
+          {
+            "id": 5,
+            "title": "Implement high availability and monitoring",
+            "description": "Configure collector for high availability and set up monitoring of the collector itself",
+            "dependencies": [
+              "11.3",
+              "11.4"
+            ],
+            "details": "1) Set up multiple collector instances with appropriate anti-affinity rules, 2) Configure health checks and readiness/liveness probes, 3) Set up ServiceMonitor for Prometheus to monitor the collector's own metrics, 4) Create alerting rules for collector issues, 5) Implement horizontal pod autoscaling based on CPU/memory usage, 6) Document operational procedures for troubleshooting collector issues",
+            "status": "completed",
+            "testStrategy": "Test failover scenarios by terminating collector pods, verify metrics collection continues without interruption, and confirm alerts trigger when collector components fail"
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Setup Prometheus and Grafana",
+        "description": "Deploy and configure Prometheus for metrics collection and Grafana for visualization in the EKS cluster.",
+        "details": "1. Use kube-prometheus-stack Helm chart for deployment\n2. Configure Prometheus:\n   - ServiceMonitor for the application\n   - PodMonitor for system components\n   - Recording rules for common queries\n   - Alerting rules for critical conditions\n   - Retention and storage configuration\n   - Remote write for long-term storage (optional)\n3. Configure Grafana:\n   - Datasources for Prometheus and other systems\n   - Custom dashboards for application metrics\n   - System dashboards for Kubernetes monitoring\n   - User authentication and authorization\n   - Dashboard provisioning\n4. Create custom dashboards:\n   - Application overview\n   - Request rate, errors, and duration (RED)\n   - Database performance\n   - System resources\n   - SLO tracking\n5. Configure alerting with proper routing\n6. Set up persistent storage for both components\n7. Configure high availability deployment",
+        "testStrategy": "1. Deploy to a test environment\n2. Verify metrics collection\n3. Test dashboard functionality\n4. Verify alerting rules\n5. Test high availability\n6. Verify persistent storage\n7. Test user authentication",
+        "priority": "high",
+        "dependencies": [
+          10,
+          11
+        ],
+        "status": "completed",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Deploy kube-prometheus-stack Helm Chart",
+            "description": "Install and configure the kube-prometheus-stack Helm chart in the EKS cluster with persistent storage and high availability settings.",
+            "dependencies": [],
+            "details": "1. Add the Prometheus community Helm repository\n2. Create values.yaml with configuration for persistent storage\n3. Configure high availability settings for Prometheus and Grafana\n4. Set resource requests and limits appropriate for the cluster\n5. Deploy the chart with proper namespace and release name\n6. Verify all components are running correctly",
+            "status": "completed",
+            "testStrategy": "1. Check that all pods are running and ready\n2. Verify persistent volumes are correctly bound\n3. Test basic metrics collection\n4. Validate high availability by simulating node failure\n5. Check that Prometheus and Grafana web interfaces are accessible"
+          },
+          {
+            "id": 2,
+            "title": "Configure Prometheus Monitoring",
+            "description": "Set up ServiceMonitors, PodMonitors, recording rules, and alerting rules for the application and system components.",
+            "dependencies": [
+              "12.1"
+            ],
+            "details": "1. Create ServiceMonitor for the application with appropriate endpoint and interval configuration\n2. Set up PodMonitors for system components\n3. Configure recording rules for common queries to improve performance\n4. Implement alerting rules for critical conditions with proper thresholds\n5. Configure retention and storage settings based on requirements\n6. Set up remote write configuration for long-term storage if needed",
+            "status": "completed",
+            "testStrategy": "1. Verify ServiceMonitors and PodMonitors are correctly discovering targets\n2. Test that metrics are being collected properly\n3. Validate recording rules are working and generating expected time series\n4. Test alerting rules by simulating failure conditions\n5. Check retention policies are applied correctly"
+          },
+          {
+            "id": 3,
+            "title": "Configure Grafana Dashboards and Data Sources",
+            "description": "Set up Grafana with appropriate data sources and create custom dashboards for application and system monitoring.",
+            "dependencies": [
+              "12.1",
+              "12.2"
+            ],
+            "details": "1. Configure Prometheus as the primary data source in Grafana\n2. Set up additional data sources as needed (Loki, CloudWatch, etc.)\n3. Create custom dashboards for application metrics including RED (Request Rate, Errors, Duration)\n4. Set up system dashboards for Kubernetes monitoring\n5. Configure dashboard provisioning for version control\n6. Implement SLO tracking dashboards with error budgets",
+            "status": "completed",
+            "testStrategy": "1. Verify all data sources are connected and working\n2. Test dashboard functionality with live data\n3. Validate that all panels display correct metrics\n4. Test dashboard provisioning from configuration files\n5. Verify SLO tracking accuracy"
+          },
+          {
+            "id": 4,
+            "title": "Implement Alerting and Notification Channels",
+            "description": "Configure alerting rules with proper routing and notification channels for different severity levels and teams.",
+            "dependencies": [
+              "12.2",
+              "12.3"
+            ],
+            "details": "1. Set up notification channels (Slack, email, PagerDuty, etc.)\n2. Configure alert routing based on severity and team ownership\n3. Implement alert grouping to prevent alert storms\n4. Set up silencing rules for maintenance windows\n5. Create runbooks for common alerts\n6. Configure alert templates with actionable information",
+            "status": "completed",
+            "testStrategy": "1. Test alert firing by triggering test conditions\n2. Verify notifications are sent to the correct channels\n3. Test alert grouping functionality\n4. Validate silencing rules work during maintenance\n5. Check that alert templates contain all necessary information"
+          },
+          {
+            "id": 5,
+            "title": "Integrate with OpenTelemetry Collector",
+            "description": "Configure Prometheus and Grafana to work with the OpenTelemetry Collector for comprehensive observability.",
+            "dependencies": [
+              "12.2",
+              "12.3"
+            ],
+            "details": "1. Configure Prometheus to scrape metrics from the OpenTelemetry Collector\n2. Set up exemplars in Prometheus to link metrics with traces\n3. Create Grafana dashboards that combine metrics, logs, and traces\n4. Configure correlation between metrics and traces using trace IDs\n5. Set up service graphs in Grafana based on trace data\n6. Implement dashboard links to navigate between related metrics and traces",
+            "status": "completed",
+            "testStrategy": "1. Verify metrics from OpenTelemetry Collector are being collected\n2. Test exemplar functionality to ensure metrics link to traces\n3. Validate correlation between metrics and traces works correctly\n4. Test service graph visualization accuracy\n5. Verify dashboard links navigate to correct related data"
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "title": "Implement SLI/SLO Monitoring",
+        "description": "Define and implement Service Level Indicators (SLIs) and Service Level Objectives (SLOs) for the application.",
+        "details": "1. Define key SLIs:\n   - Availability (success rate of requests)\n   - Latency (response time percentiles)\n   - Throughput (requests per second)\n   - Error rate (percentage of failed requests)\n2. Set up SLO targets:\n   - 99.9% availability\n   - 95th percentile latency < 100ms\n   - Error rate < 0.1%\n3. Implement Prometheus recording rules for SLI calculations\n4. Create error budget tracking\n5. Set up alerting based on error budget burn rate\n6. Create SLO dashboards in Grafana\n7. Configure multi-window, multi-burn-rate alerts\n8. Set up SLO reporting\n9. Implement custom SLI metrics for business-critical operations",
+        "testStrategy": "1. Validate SLI metrics calculation\n2. Test error budget calculation\n3. Verify alerting based on burn rate\n4. Test dashboard functionality\n5. Simulate SLO violations and verify alerts\n6. Verify reporting functionality",
+        "priority": "high",
+        "dependencies": [
+          12
+        ],
+        "status": "completed",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define SLIs and SLO targets",
+            "description": "Define key Service Level Indicators and establish Service Level Objectives with specific targets for the application.",
+            "dependencies": [],
+            "details": "1. Document the four key SLIs: availability (success rate), latency (response time percentiles), throughput (requests per second), and error rate (percentage of failed requests).\n2. Establish SLO targets: 99.9% availability, 95th percentile latency < 100ms, error rate < 0.1%.\n3. Create a document detailing the SLI/SLO definitions and targets.\n4. Identify critical user journeys that require custom SLIs.\n5. Define error budget policy based on the SLO targets.",
+            "status": "completed",
+            "testStrategy": "1. Review SLI definitions for completeness and relevance to the application.\n2. Validate that SLO targets are realistic and achievable.\n3. Verify that custom SLIs cover all business-critical operations."
+          },
+          {
+            "id": 2,
+            "title": "Implement Prometheus recording rules for SLIs",
+            "description": "Create Prometheus recording rules to calculate SLIs and implement error budget tracking.",
+            "dependencies": [
+              "13.1"
+            ],
+            "details": "1. Develop Prometheus recording rules for each SLI (availability, latency, throughput, error rate).\n2. Implement error budget calculations based on the defined SLOs.\n3. Create multi-window SLI calculations (1h, 6h, 24h, 30d).\n4. Set up custom SLI metrics for business-critical operations.\n5. Document all recording rules with explanations of their purpose and calculation method.",
+            "status": "completed",
+            "testStrategy": "1. Validate SLI metrics calculation accuracy.\n2. Test error budget calculation with simulated data.\n3. Verify that recording rules perform efficiently without excessive resource usage.\n4. Confirm custom SLI metrics capture the intended business operations."
+          },
+          {
+            "id": 3,
+            "title": "Configure alerting based on error budgets",
+            "description": "Set up alerting system based on error budget burn rates to notify teams of potential SLO violations.",
+            "dependencies": [
+              "13.2"
+            ],
+            "details": "1. Implement multi-window, multi-burn-rate alert rules in Prometheus.\n2. Configure alert severity levels based on burn rate thresholds.\n3. Set up notification channels (email, Slack, PagerDuty) for different alert severities.\n4. Create alert documentation with response procedures.\n5. Implement alert suppression mechanisms to prevent alert storms.",
+            "status": "completed",
+            "testStrategy": "1. Test alerting by simulating SLO violations at different burn rates.\n2. Verify that alerts are routed to the correct notification channels.\n3. Confirm alert suppression works as expected during incident windows.\n4. Test alert recovery behavior when metrics return to normal."
+          },
+          {
+            "id": 4,
+            "title": "Create SLO dashboards in Grafana",
+            "description": "Design and implement Grafana dashboards to visualize SLIs, SLOs, and error budgets.",
+            "dependencies": [
+              "13.2",
+              "13.3"
+            ],
+            "details": "1. Create a main SLO overview dashboard showing all SLIs vs their targets.\n2. Implement detailed dashboards for each SLI category.\n3. Design error budget consumption visualizations with burn-down charts.\n4. Add historical SLO performance trends.\n5. Create custom business SLI dashboards for key operations.",
+            "status": "completed",
+            "testStrategy": "1. Verify dashboard functionality and data accuracy.\n2. Test dashboard performance with different time ranges.\n3. Ensure dashboards are readable and intuitive for both technical and non-technical users.\n4. Validate that all required metrics are properly displayed."
+          },
+          {
+            "id": 5,
+            "title": "Implement SLO reporting system",
+            "description": "Create an automated reporting system for SLO performance and error budget status.",
+            "dependencies": [
+              "13.1",
+              "13.2",
+              "13.3",
+              "13.4"
+            ],
+            "details": "1. Develop weekly and monthly SLO performance reports.\n2. Implement automated report generation and distribution.\n3. Create error budget status notifications for stakeholders.\n4. Set up trend analysis for SLI performance over time.\n5. Implement a system to track and document SLO violations with post-mortem links.",
+            "status": "completed",
+            "testStrategy": "1. Verify report generation accuracy and completeness.\n2. Test automated distribution to ensure reports reach intended recipients.\n3. Validate that reports contain actionable insights.\n4. Confirm that historical data is correctly preserved and accessible."
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "title": "Implement Security Measures",
+        "description": "Enhance the security posture of the application and infrastructure with best practices and tools.",
+        "details": "1. Implement network policies:\n   - Restrict pod-to-pod communication\n   - Limit egress traffic\n   - Secure ingress access\n2. Configure pod security context:\n   - Non-root user\n   - Read-only root filesystem\n   - Drop capabilities\n   - Run as non-privileged\n3. Set up sealed-secrets for sensitive data\n4. Implement RBAC:\n   - Service accounts with minimal permissions\n   - Role bindings for specific namespaces\n   - Cluster roles for cross-namespace resources\n5. Configure security scanning:\n   - Container image scanning with Trivy\n   - Kubernetes manifest validation with kube-score\n   - Runtime security with Falco\n6. Implement secrets rotation\n7. Configure audit logging\n8. Set up pod security admission\n9. Implement TLS for all services",
+        "testStrategy": "1. Validate network policies\n2. Test pod security context\n3. Verify RBAC permissions\n4. Run security scanning tools\n5. Test secrets management\n6. Verify TLS configuration\n7. Test pod security admission",
+        "priority": "high",
+        "dependencies": [
+          8,
+          10
+        ],
+        "status": "completed",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Network Policies",
+            "description": "Configure Kubernetes network policies to control pod-to-pod communication, limit egress traffic, and secure ingress access.",
+            "dependencies": [],
+            "details": "1. Create network policies to restrict pod-to-pod communication based on labels and namespaces\n2. Implement egress policies to limit outbound traffic to specific endpoints\n3. Configure ingress policies to secure incoming traffic\n4. Test network isolation with connectivity validation tools\n5. Document network policy implementation and rationale",
+            "status": "completed",
+            "testStrategy": "1. Use network policy testing tools like netassert\n2. Verify pod isolation with test pods attempting unauthorized connections\n3. Confirm authorized connections work as expected\n4. Test egress limitations with external endpoints\n5. Validate ingress restrictions with various access patterns"
+          },
+          {
+            "id": 2,
+            "title": "Configure Pod Security Context",
+            "description": "Implement pod security contexts to enforce non-root user execution, read-only filesystems, capability restrictions, and non-privileged operation.",
+            "dependencies": [],
+            "details": "1. Update deployment manifests to include security context configurations\n2. Configure pods to run as non-root users with specific UIDs\n3. Implement read-only root filesystem settings with appropriate volume mounts for writable directories\n4. Drop unnecessary Linux capabilities and retain only required ones\n5. Ensure containers run as non-privileged with appropriate seccomp profiles",
+            "status": "completed",
+            "testStrategy": "1. Verify pod security contexts are applied correctly using kubectl describe\n2. Test application functionality with security contexts applied\n3. Attempt privilege escalation to confirm restrictions\n4. Validate filesystem permissions with exec into containers\n5. Run CIS benchmark tests to verify security posture"
+          },
+          {
+            "id": 3,
+            "title": "Implement RBAC and Secret Management",
+            "description": "Set up Role-Based Access Control (RBAC) with minimal permissions and implement sealed-secrets for sensitive data management.",
+            "dependencies": [],
+            "details": "1. Create service accounts with minimal permissions for each application component\n2. Define roles and role bindings for namespace-specific resources\n3. Configure cluster roles for cross-namespace resources\n4. Install and configure sealed-secrets controller\n5. Convert existing Kubernetes secrets to sealed-secrets format\n6. Implement secrets rotation mechanism with appropriate scheduling",
+            "status": "completed",
+            "testStrategy": "1. Verify RBAC permissions using auth can-i commands\n2. Test service account access to resources\n3. Validate sealed-secrets encryption and decryption\n4. Test secrets rotation process\n5. Confirm applications can access required secrets"
+          },
+          {
+            "id": 4,
+            "title": "Configure Security Scanning and Audit Logging",
+            "description": "Implement container image scanning, Kubernetes manifest validation, runtime security monitoring, and comprehensive audit logging.",
+            "dependencies": [
+              "14.1",
+              "14.2",
+              "14.3"
+            ],
+            "details": "1. Set up Trivy for container image vulnerability scanning in CI/CD pipeline\n2. Implement kube-score for Kubernetes manifest validation\n3. Deploy Falco for runtime security monitoring\n4. Configure Kubernetes audit logging with appropriate verbosity levels\n5. Set up log aggregation and alerting for security events",
+            "status": "completed",
+            "testStrategy": "1. Run test scans with known vulnerabilities to verify detection\n2. Validate manifest scoring against security best practices\n3. Test Falco rule triggers with simulated security events\n4. Verify audit logs capture relevant security actions\n5. Test alerting pipeline for security incidents"
+          },
+          {
+            "id": 5,
+            "title": "Implement TLS and Pod Security Admission",
+            "description": "Configure TLS for all services and implement Pod Security Admission controls to enforce security standards.",
+            "dependencies": [
+              "14.2",
+              "14.3"
+            ],
+            "details": "1. Generate and manage TLS certificates for all services\n2. Configure mutual TLS (mTLS) between services\n3. Implement certificate rotation procedures\n4. Configure Pod Security Admission with appropriate enforcement levels\n5. Create custom Pod Security Standards based on application requirements\n6. Document security configurations and compliance standards met",
+            "status": "completed",
+            "testStrategy": "1. Verify TLS configuration with SSL testing tools\n2. Test certificate validation and expiration handling\n3. Validate Pod Security Admission blocks non-compliant workloads\n4. Confirm compliant workloads deploy successfully\n5. Test certificate rotation process\n6. Perform security compliance assessment"
+          }
+        ]
+      },
+      {
+        "id": 15,
+        "title": "Create Documentation and Runbooks for Observability Platform",
+        "description": "Develop comprehensive documentation and operational runbooks for the observability platform and demo application.",
+        "details": "1. Create platform documentation:\n   - Architecture overview of the observability platform\n   - Component descriptions (Prometheus, Grafana, OpenTelemetry)\n   - Deployment and configuration instructions\n   - Integration guidelines for applications\n2. Develop runbooks for common operations:\n   - Monitoring system maintenance\n   - Alert response procedures\n   - Scaling the observability stack\n   - Troubleshooting observability components\n3. Create demo application documentation:\n   - Simple setup instructions\n   - How it demonstrates platform capabilities\n   - Integration points with the observability platform\n4. Document security practices for the platform\n5. Create onboarding documentation for new users of the platform",
+        "testStrategy": "1. Review documentation for accuracy\n2. Test runbooks with actual scenarios\n3. Verify platform documentation with actual deployment\n4. Test demo application documentation with new users\n5. Get feedback from team members",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Platform Architecture Documentation",
+            "description": "Develop comprehensive documentation covering the observability platform architecture and components",
+            "dependencies": [],
+            "details": "1. Create architecture overview document with system diagrams\n2. Document all platform components (Prometheus, Grafana, OpenTelemetry Collector)\n3. Describe data flows and integration points\n4. Create architecture diagrams using draw.io or Mermaid\n5. Document configuration options and customization points",
+            "status": "pending",
+            "testStrategy": "1. Review documentation for technical accuracy\n2. Verify diagrams match actual deployment\n3. Have team members review for clarity and completeness"
+          },
+          {
+            "id": 2,
+            "title": "Develop Operational Runbooks",
+            "description": "Create detailed runbooks for operating and maintaining the observability platform",
+            "dependencies": [
+              "15.1"
+            ],
+            "details": "1. Document monitoring system maintenance procedures\n2. Create alert response playbooks\n3. Document scaling procedures for the observability stack\n4. Develop troubleshooting guides for common issues\n5. Create incident response templates",
+            "status": "pending",
+            "testStrategy": "1. Test runbooks with actual scenarios\n2. Conduct dry runs of procedures\n3. Verify all commands and scripts work as documented\n4. Update based on feedback from actual use"
+          },
+          {
+            "id": 3,
+            "title": "Create Demo Application Documentation",
+            "description": "Develop documentation for the demo application that showcases the observability platform",
+            "dependencies": [
+              "15.1"
+            ],
+            "details": "1. Create setup instructions for the demo application\n2. Document how the demo application demonstrates platform capabilities\n3. Describe integration points with the observability platform\n4. Create examples of observability data generated by the demo\n5. Document how to use the demo for presentations",
+            "status": "pending",
+            "testStrategy": "1. Test setup instructions with new users\n2. Verify examples work as documented\n3. Confirm integration points function correctly"
+          },
+          {
+            "id": 4,
+            "title": "Document Security Practices",
+            "description": "Create documentation for security aspects of the observability platform",
+            "dependencies": [
+              "15.1"
+            ],
+            "details": "1. Document access management for observability tools\n2. Create guides for securing the observability platform\n3. Document data retention and privacy considerations\n4. Create security hardening guidelines\n5. Document compliance considerations",
+            "status": "pending",
+            "testStrategy": "1. Review security documentation with security team\n2. Verify security configurations work as documented\n3. Test access controls and permissions"
+          },
+          {
+            "id": 5,
+            "title": "Create Onboarding Documentation",
+            "description": "Develop onboarding materials for new users of the observability platform",
+            "dependencies": [
+              "15.1",
+              "15.2",
+              "15.3",
+              "15.4"
+            ],
+            "details": "1. Create getting started guide for new users\n2. Develop tutorials for common tasks\n3. Create reference documentation for APIs and integration points\n4. Document best practices for using the platform\n5. Create training materials for workshops",
+            "status": "pending",
+            "testStrategy": "1. Test onboarding documentation with new users\n2. Gather feedback on clarity and completeness\n3. Verify tutorials work as expected\n4. Update based on user feedback"
+          }
+        ]
+      },
+      {
+        "id": 16,
+        "title": "Create Terraform Infrastructure as Code Configuration",
+        "description": "Develop a comprehensive Terraform configuration that replicates the infrastructure setup including EKS cluster, monitoring stack, distributed tracing, and GitOps tools in a production-ready IaC approach.",
+        "status": "completed",
+        "dependencies": [
+          10,
+          9,
+          11
+        ],
+        "priority": "high",
+        "details": "COMPLETED: Successfully created a comprehensive Terraform configuration that replicates the shell script functionality with the following structure:\n\n- `main.tf`: Complete infrastructure definition with EKS, VPC, monitoring stack\n- `variables.tf`: All configurable parameters with sensible defaults  \n- `outputs.tf`: Comprehensive outputs for cluster access and service endpoints\n- `versions.tf`: Provider version constraints\n- `terraform.tfvars.example`: Example configuration file\n- `README.md`: Detailed documentation with usage instructions\n- `Makefile`: Convenient commands for common operations\n- `values/`: Directory with Helm chart configurations\n  - `prometheus-values.yaml`: Prometheus/Grafana stack config\n  - `tempo-values.yaml`: Tempo tracing config (using corrected local backend)\n  - `argocd-values.yaml`: ArgoCD GitOps config\n\nThe Terraform configuration provides the same infrastructure as the shell script but with IaC benefits: version control, state management, idempotency, and easier maintenance. Includes comprehensive documentation and a Makefile for easy usage.",
+        "testStrategy": "1. Validate Terraform configuration with `terraform validate` and `terraform fmt -check`\n\n2. Run static code analysis with tools like tflint and tfsec to identify potential issues and security concerns\n\n3. Execute `terraform plan` to verify expected changes\n\n4. Apply the configuration in a development environment:\n   - Verify EKS cluster creation and accessibility\n   - Confirm node groups are properly configured\n   - Test autoscaling functionality\n   - Validate IAM roles and permissions\n\n5. Test the monitoring stack:\n   - Verify Prometheus deployment and data collection\n   - Check Grafana dashboards are properly configured\n   - Test alerting functionality\n   - Validate ServiceMonitor discovery\n\n6. Verify tracing functionality:\n   - Confirm Tempo deployment\n   - Test trace collection and visualization\n   - Validate integration with other components\n\n7. Test GitOps deployment:\n   - Verify ArgoCD installation\n   - Test application deployment through GitOps\n   - Validate RBAC configurations\n\n8. Perform security testing:\n   - Validate network segmentation\n   - Test security group configurations\n   - Verify least privilege principles\n\n9. Test infrastructure resilience:\n   - Simulate node failures\n   - Test zone outages\n   - Verify high availability configurations\n\n10. Conduct performance testing:\n    - Measure deployment time\n    - Evaluate resource utilization\n    - Test scaling capabilities\n\n11. Verify Makefile functionality:\n    - Test all provided commands\n    - Verify they perform the expected operations\n\n12. Test the example configuration file:\n    - Verify it can be used to create a working environment\n    - Validate all parameters work as expected\n\n13. Document test results and create runbooks for common operations",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create basic Terraform structure",
+            "description": "Created main.tf, variables.tf, outputs.tf, and versions.tf files with proper organization",
+            "status": "completed",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement EKS and VPC configuration",
+            "description": "Configured EKS cluster with proper node groups and VPC with appropriate networking",
+            "status": "completed",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Set up monitoring stack configuration",
+            "description": "Created Prometheus/Grafana stack configuration with values/prometheus-values.yaml",
+            "status": "completed",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Configure distributed tracing",
+            "description": "Implemented Tempo tracing configuration with corrected local backend in values/tempo-values.yaml",
+            "status": "completed",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Set up GitOps tools",
+            "description": "Configured ArgoCD GitOps deployment with values/argocd-values.yaml",
+            "status": "completed",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Create documentation and examples",
+            "description": "Developed README.md with detailed documentation and terraform.tfvars.example for configuration",
+            "status": "completed",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Implement Makefile for common operations",
+            "description": "Created Makefile with convenient commands for terraform operations",
+            "status": "completed",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-07-25T06:05:39.103Z",
+      "updated": "2025-07-26T01:15:45.798Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

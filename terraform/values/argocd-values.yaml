@@ -1,0 +1,69 @@
+# ArgoCD Configuration for Terraform
+
+global:
+  image:
+    tag: "v2.8.4"
+
+server:
+  service:
+    type: ClusterIP
+  ingress:
+    enabled: false
+  
+  # ArgoCD server configuration
+  config:
+    # Enable insecure mode for easier access during development
+    server.insecure: true
+    # Application instance label key
+    application.instanceLabelKey: argocd.argoproj.io/instance
+
+controller:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+repoServer:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+applicationSet:
+  enabled: true
+  replicas: 1
+
+notifications:
+  enabled: true
+
+dex:
+  enabled: true
+
+redis:
+  enabled: true
+
+# RBAC configuration
+configs:
+  rbac:
+    policy.default: role:readonly
+    policy.csv: |
+      p, role:admin, applications, *, */*, allow
+      p, role:admin, clusters, *, *, allow
+      p, role:admin, repositories, *, *, allow
+      g, argocd-admins, role:admin
+
+  # Repository credentials (can be configured later)
+  repositories: {}
+
+  # Known hosts for Git repositories
+  ssh:
+    knownHosts: |
+      github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==
