@@ -9,6 +9,12 @@
 - 📜 **Setup & Teardown Scripts** - One-command infrastructure lifecycle management
 - 🎯 **Sample CRUD App** - Go application demonstrating platform capabilities
 
+**🔮 Future Enhancements (TODO):**
+- 🔄 **Argo Rollouts** - Advanced deployment strategies (blue-green, canary) for zero-downtime releases
+- 🛡️ **Kyverno** - Policy-as-code engine for Kubernetes security and governance automation
+- 🔍 **Trivy** - Comprehensive vulnerability scanner for containers, IaC, and Kubernetes manifests
+- 📢 **Slack Alerts** - Real-time notifications for monitoring alerts, deployment status, and security events
+
 ## 🌐 Network Architecture
 
 ```mermaid
