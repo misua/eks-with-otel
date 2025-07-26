@@ -1,4 +1,4 @@
-# 🚀 EKS with OpenTelemetry CRUD Infrastructure
+# 🚀 EKS with OpenTelemetry Infrastructure & Sample Crud app
 
 Complete infrastructure-first setup for a Go CRUD application with EKS, OpenTelemetry, Prometheus, Grafana, and ArgoCD. Copy and paste commands in order.
 
