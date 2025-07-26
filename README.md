@@ -35,6 +35,7 @@ graph TD
                 
                 subgraph GitOps [ArgoCD Namespace]
                     ArgoCD[ArgoCD<br/>GitOps Controller]
+                    ArgoRollouts[Argo Rollouts<br/>(Planned Feature)<br/>Advanced Deployments]
                 end
             end
             
@@ -56,11 +57,13 @@ graph TD
     classDef monitoringFill fill:#7928CA,stroke:#fff,stroke-width:1px,color:#fff;
     classDef tracingFill fill:#FF4F8B,stroke:#fff,stroke-width:1px,color:#fff;
     classDef gitopsFill fill:#EF7A08,stroke:#fff,stroke-width:1px,color:#fff;
+    classDef plannedFill fill:#808080,stroke:#fff,stroke-width:1px,color:#fff,stroke-dasharray: 5 5;
     
     class Worker_Nodes,API_Server,ETCD k8sFill
     class Prometheus,Grafana monitoringFill
     class Tempo tracingFill
-    class ArgoCD gitopsFill
+    class ArgoCD,ArgoRollouts gitopsFill
+    class ArgoRollouts plannedFill
     class IGW,NAT awsFill
     
     Internet --- IGW
@@ -68,6 +71,7 @@ graph TD
     NAT --- Worker_Nodes
     GitHub -.-> ArgoCD
     ArgoCD ==> Prometheus & Grafana & Tempo
+    ArgoCD -.-> ArgoRollouts
     Worker_Nodes -.-> Prometheus
     Worker_Nodes -.-> Tempo
     Prometheus --- Grafana
