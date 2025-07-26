@@ -14,6 +14,10 @@
 - 🛡️ **Kyverno** - Policy-as-code engine for Kubernetes security and governance automation
 - 🔍 **Trivy** - Comprehensive vulnerability scanner for containers, IaC, and Kubernetes manifests
 - 📢 **Slack Alerts** - Real-time notifications for monitoring alerts, deployment status, and security events
+- 🚨 **Falco** - Runtime security monitoring for detecting anomalous behavior and security threats
+- 📝 **Loki** - Log aggregation system to complete the observability trinity (metrics, traces, logs)
+- 🔔 **AlertManager** - Advanced alerting rules, routing, and notification management
+- ⚡ **Karpenter** - Intelligent node provisioning and autoscaling for cost-optimized workload scheduling
 
 ## 🌐 Network Architecture
 
