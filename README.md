@@ -15,7 +15,8 @@ graph TD
             subgraph Private_Subnets [Private Subnets]
                 subgraph EKS_Cluster [EKS Cluster]
                     subgraph Node_Group [EKS Node Group]
-                        Worker_Nodes[EKS Worker Nodes\n(t3.medium instances)]
+                        Worker_Nodes[EKS Worker Nodes
+(t3.medium instances)]
                     end
                     
                     subgraph Control_Plane [Control Plane]
@@ -25,17 +26,23 @@ graph TD
                 end
                 
                 subgraph Monitoring [Monitoring Namespace]
-                    Prometheus[Prometheus\nMetrics Collection]
-                    Grafana[Grafana\nMetrics Visualization]
+                    Prometheus[Prometheus
+Metrics Collection]
+                    Grafana[Grafana
+Metrics Visualization]
                 end
                 
                 subgraph Tracing [Tracing Namespace]
-                    Tempo[Tempo\nDistributed Tracing]
+                    Tempo[Tempo
+Distributed Tracing]
                 end
                 
                 subgraph GitOps [ArgoCD Namespace]
-                    ArgoCD[ArgoCD\nGitOps Controller]
-                    ArgoRollouts[Argo Rollouts\n(Planned Feature)\nAdvanced Deployments]
+                    ArgoCD[ArgoCD
+GitOps Controller]
+                    ArgoRollouts[Argo Rollouts
+(Planned Feature)
+Advanced Deployments]
                 end
             end
             
