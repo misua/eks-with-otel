@@ -8,7 +8,6 @@
 - 🚀 **GitOps Deployment** - ArgoCD for continuous deployment
 - 🛠️ **Infrastructure as Code** - Terraform configurations for reproducible deployments
 - 📜 **Setup & Teardown Scripts** - One-command infrastructure lifecycle management
-- 🎯 **Sample CRUD App** - Go application demonstrating platform capabilities
 
 **🔮 Future Enhancements (TODO):**
 - 🔄 **Argo Rollouts** - Advanced deployment strategies (blue-green, canary) for zero-downtime releases
