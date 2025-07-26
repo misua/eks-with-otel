@@ -6,53 +6,46 @@ Complete infrastructure-first setup for a Go CRUD application with EKS, OpenTele
 
 ```mermaid
 graph TD
-    subgraph AWS_Cloud [AWS Cloud - us-west-2]
-        subgraph VPC [VPC - 10.0.0.0/16]
-            subgraph Public_Subnets [Public Subnets]
-                IGW[Internet Gateway]
+    subgraph AWS_Cloud ["AWS Cloud - us-west-2"]
+        subgraph VPC ["VPC - 10.0.0.0/16"]
+            subgraph Public_Subnets ["Public Subnets"]
+                IGW["Internet Gateway"]
             end
             
-            subgraph Private_Subnets [Private Subnets]
-                subgraph EKS_Cluster [EKS Cluster]
-                    subgraph Node_Group [EKS Node Group]
-                        Worker_Nodes[EKS Worker Nodes
-(t3.medium instances)]
+            subgraph Private_Subnets ["Private Subnets"]
+                subgraph EKS_Cluster ["EKS Cluster"]
+                    subgraph Node_Group ["EKS Node Group"]
+                        Worker_Nodes["EKS Worker Nodes (t3.medium)"]
                     end
                     
-                    subgraph Control_Plane [Control Plane]
-                        API_Server[Kubernetes API Server]
-                        ETCD[etcd]
+                    subgraph Control_Plane ["Control Plane"]
+                        API_Server["Kubernetes API Server"]
+                        ETCD["etcd"]
                     end
                 end
                 
-                subgraph Monitoring [Monitoring Namespace]
-                    Prometheus[Prometheus
-Metrics Collection]
-                    Grafana[Grafana
-Metrics Visualization]
+                subgraph Monitoring ["Monitoring Namespace"]
+                    Prometheus["Prometheus - Metrics Collection"]
+                    Grafana["Grafana - Metrics Visualization"]
                 end
                 
-                subgraph Tracing [Tracing Namespace]
-                    Tempo[Tempo
-Distributed Tracing]
+                subgraph Tracing ["Tracing Namespace"]
+                    Tempo["Tempo - Distributed Tracing"]
                 end
                 
-                subgraph GitOps [ArgoCD Namespace]
-                    ArgoCD[ArgoCD
-GitOps Controller]
-                    ArgoRollouts[Argo Rollouts
-(Planned Feature)
-Advanced Deployments]
+                subgraph GitOps ["ArgoCD Namespace"]
+                    ArgoCD["ArgoCD - GitOps Controller"]
+                    ArgoRollouts["Argo Rollouts (Planned) - Advanced Deployments"]
                 end
             end
             
-            NAT[NAT Gateway]
+            NAT["NAT Gateway"]
         end
     end
     
-    subgraph External [External Services]
-        Internet[Internet Users]
-        GitHub[GitHub Repository]
+    subgraph External ["External Services"]
+        Internet["Internet Users"]
+        GitHub["GitHub Repository"]
     end
     
     style VPC fill:#f9f,stroke:#333,stroke-width:2px
@@ -77,7 +70,9 @@ Advanced Deployments]
     IGW --- NAT
     NAT --- Worker_Nodes
     GitHub -.-> ArgoCD
-    ArgoCD ==> Prometheus & Grafana & Tempo
+    ArgoCD ==> Prometheus
+    ArgoCD ==> Grafana
+    ArgoCD ==> Tempo
     ArgoCD -.-> ArgoRollouts
     Worker_Nodes -.-> Prometheus
     Worker_Nodes -.-> Tempo
