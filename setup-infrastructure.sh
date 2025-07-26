@@ -226,6 +226,36 @@ else
     echo "No Tempo pod found"
 fi
 
+# Step 4.5: Deploy OpenTelemetry Collector
+print_step "Deploying OpenTelemetry Collector..."
+
+# Add OpenTelemetry Helm repository
+print_step "Adding OpenTelemetry Helm repository..."
+helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+helm repo update
+
+# Deploy OpenTelemetry Collector
+if [ -f "eks-infrastructure/monitoring/otel-collector-values.yaml" ]; then
+    print_step "Installing OpenTelemetry Collector..."
+    helm install otel-collector open-telemetry/opentelemetry-collector -n tracing -f eks-infrastructure/monitoring/otel-collector-values.yaml
+else
+    print_error "OpenTelemetry Collector values file not found! Please ensure 'otel-collector-values.yaml' exists."
+    exit 1
+fi
+
+if [ $? -eq 0 ]; then
+    print_success "OpenTelemetry Collector deployed successfully"
+else
+    print_error "Failed to deploy OpenTelemetry Collector"
+    echo "Checking recent logs for debugging..."
+    kubectl get pods -n tracing 2>/dev/null | head -10 || echo "No tracing pods found"
+    exit 1
+fi
+
+# Wait for OpenTelemetry Collector to be ready
+print_step "Waiting for OpenTelemetry Collector to be ready..."
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=opentelemetry-collector -n tracing --timeout=300s || echo "⚠️ Timeout waiting for OpenTelemetry Collector pods, continuing..."
+
 # Step 5: Deploy ArgoCD for GitOps
 print_step "Deploying ArgoCD for GitOps..."
 echo "Deploying ArgoCD..."

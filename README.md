@@ -4,6 +4,7 @@
 - 🏗️ **EKS Cluster Setup** - Automated cluster provisioning with managed node groups
 - 📊 **Monitoring Stack** - Prometheus + Grafana with persistent storage
 - 🔍 **Distributed Tracing** - Tempo for OpenTelemetry trace collection
+- 🔗 **OpenTelemetry Collector** - Centralized trace collection and processing to send traces to Tempo
 - 🚀 **GitOps Deployment** - ArgoCD for continuous deployment
 - 🛠️ **Infrastructure as Code** - Terraform configurations for reproducible deployments
 - 📜 **Setup & Teardown Scripts** - One-command infrastructure lifecycle management

@@ -149,6 +149,15 @@ print_step "Starting infrastructure cleanup..."
 # Step 1: Uninstall Helm releases
 print_step "Uninstalling Helm releases..."
 
+# Uninstall OpenTelemetry Collector
+if helm list -n tracing 2>/dev/null | grep -q otel-collector; then
+    print_step "Uninstalling OpenTelemetry Collector..."
+    helm uninstall otel-collector -n tracing --wait || print_warning "Failed to uninstall OpenTelemetry Collector cleanly"
+    print_success "OpenTelemetry Collector uninstalled"
+else
+    print_info "OpenTelemetry Collector not found, skipping"
+fi
+
 # Uninstall Tempo
 if helm list -n tracing 2>/dev/null | grep -q tempo; then
     print_step "Uninstalling Grafana Tempo..."

@@ -95,6 +95,12 @@ variable "tempo_chart_version" {
   default     = "1.6.2"
 }
 
+variable "otel_collector_chart_version" {
+  description = "Version of the OpenTelemetry Collector Helm chart"
+  type        = string
+  default     = "0.88.0"
+}
+
 variable "argocd_chart_version" {
   description = "Version of the ArgoCD Helm chart"
   type        = string

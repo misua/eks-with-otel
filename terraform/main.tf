@@ -260,6 +260,26 @@ resource "helm_release" "tempo" {
   ]
 }
 
+# Helm Release: OpenTelemetry Collector
+resource "helm_release" "otel_collector" {
+  name       = "otel-collector"
+  repository = "https://open-telemetry.github.io/opentelemetry-helm-charts"
+  chart      = "opentelemetry-collector"
+  namespace  = kubernetes_namespace.tracing.metadata[0].name
+  version    = var.otel_collector_chart_version
+
+  values = [
+    file("${path.module}/values/otel-collector-values.yaml")
+  ]
+
+  depends_on = [
+    module.eks,
+    kubernetes_namespace.tracing,
+    helm_release.tempo,
+    aws_eks_addon.ebs_csi
+  ]
+}
+
 # Helm Release: ArgoCD
 resource "helm_release" "argocd" {
   name       = "argocd"
