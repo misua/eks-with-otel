@@ -126,14 +126,203 @@ flowchart TB
 
 - AWS CLI configured with appropriate permissions
 - kubectl installed and configured
+- Terraform >= 1.0 installed
 - Helm 3.x installed
 - Docker installed
 - Go 1.21+ installed
-- An existing EKS cluster (or use the setup script to create one)
 
 ---
 
-# 📋 Step-by-Step Deployment Guide
+# 📋 Deployment Options
+
+This project supports two deployment methods:
+
+1. **🏗️ Terraform Deployment** (Recommended) - Infrastructure as Code with full automation
+2. **📜 Script-based Deployment** - Traditional Helm/kubectl approach
+
+---
+
+# 🏗️ Terraform Deployment (Recommended)
+
+## Overview
+
+The Terraform deployment provides a complete, production-ready EKS observability stack with:
+
+- **EKS Cluster** with managed node groups
+- **Complete Observability Stack** (Prometheus, Grafana, Loki, Tempo, Enhanced OTEL Collector)
+- **Networking** (VPC, subnets, security groups)
+- **Storage** (EBS CSI driver, persistent volumes)
+- **GitOps** (ArgoCD for application management)
+
+## Phase 1: Infrastructure Setup
+
+### Step 1: Prepare Terraform Environment
+```bash
+# Clone the repository
+git clone <your-repo-url>
+cd eks-with-otel/terraform
+
+# Initialize Terraform
+terraform init
+
+# Review and customize variables (optional)
+cp terraform.tfvars.example terraform.tfvars
+vim terraform.tfvars  # Edit as needed
+```
+
+### Step 2: Deploy Complete Infrastructure
+```bash
+# Plan the deployment (review changes)
+terraform plan
+
+# Deploy the complete stack (takes 15-20 minutes)
+terraform apply
+
+# When prompted, type 'yes' to confirm
+```
+
+**What gets deployed:**
+- ✅ **EKS Cluster** (`eks-otel-crud-dev`) with managed node groups
+- ✅ **VPC & Networking** (private/public subnets, NAT gateways, security groups)
+- ✅ **Prometheus + Grafana** (metrics collection and visualization)
+- ✅ **Loki (SingleBinary)** (log aggregation with filesystem storage)
+- ✅ **Promtail DaemonSet** (log collection from all pods/nodes)
+- ✅ **Tempo** (distributed tracing storage)
+- ✅ **Enhanced OpenTelemetry Collector** (multi-signal processing: traces, logs, metrics)
+- ✅ **ArgoCD** (GitOps deployment platform)
+- ✅ **EBS CSI Driver** (persistent storage support)
+- ✅ **Proper RBAC** (service accounts, cluster roles, permissions)
+
+### Step 3: Configure kubectl Access
+```bash
+# Update kubeconfig to access the new cluster
+aws eks update-kubeconfig --region us-west-2 --name eks-otel-crud-dev
+
+# Verify cluster access
+kubectl get nodes
+kubectl get namespaces
+```
+
+### Step 4: Verify Deployment Status
+```bash
+# Check all pods are running (may take 5-10 minutes for all to be ready)
+kubectl get pods --all-namespaces
+
+# Check specific observability namespaces
+echo "=== MONITORING NAMESPACE ==="
+kubectl get pods -n monitoring
+
+echo "=== TRACING NAMESPACE ==="
+kubectl get pods -n tracing
+
+echo "=== ARGOCD NAMESPACE ==="
+kubectl get pods -n argocd
+
+# Wait for all pods to be ready
+kubectl wait --for=condition=ready pod --all -n monitoring --timeout=300s
+kubectl wait --for=condition=ready pod --all -n tracing --timeout=300s
+kubectl wait --for=condition=ready pod --all -n argocd --timeout=300s
+```
+
+### Step 5: Access Grafana Dashboard
+```bash
+# Get Grafana admin password
+echo "Grafana Admin Password:"
+kubectl get secret -n monitoring prometheus-grafana -o jsonpath="{.data.admin-password}" | base64 --decode
+echo
+
+# Port forward to access Grafana (run in separate terminal)
+kubectl port-forward -n monitoring svc/prometheus-grafana 3000:80
+
+# Open browser: http://localhost:3000
+# Username: admin
+# Password: (from command above)
+```
+
+**Verify in Grafana:**
+- ✅ **Data Sources**: Prometheus, Loki, Tempo should all be connected and healthy
+- ✅ **Dashboards**: Default Kubernetes and infrastructure dashboards available
+- ✅ **Explore**: Query each data source (metrics, logs, traces)
+
+### Step 6: Verify Enhanced OpenTelemetry Collector
+```bash
+# Check OTEL Collector status
+kubectl get pods -n tracing -l app.kubernetes.io/name=opentelemetry-collector
+
+# View OTEL Collector logs (should show multi-signal processing)
+kubectl logs -n tracing deployment/otel-collector-opentelemetry-collector --tail=20
+
+# Check OTEL Collector configuration
+kubectl get configmap -n tracing otel-collector-opentelemetry-collector -o yaml
+```
+
+**Expected OTEL Collector Features:**
+- ✅ **Multi-signal processing**: Traces, logs, and metrics
+- ✅ **Kubernetes integration**: Pod/namespace metadata enrichment
+- ✅ **Multiple receivers**: OTLP, Jaeger, Prometheus, host metrics
+- ✅ **Smart routing**: Traces→Tempo, Logs→Loki, Metrics→Prometheus
+- ✅ **Resource detection**: Automatic environment metadata
+
+## Terraform Configuration Details
+
+### Key Configuration Files
+- **`main.tf`** - Main infrastructure definition (EKS, VPC, Helm releases)
+- **`variables.tf`** - Configurable parameters (regions, instance types, chart versions)
+- **`versions.tf`** - Provider version constraints
+- **`terraform.tfvars`** - Your custom variable values
+
+### Enhanced Configurations Used
+- **`../eks-infrastructure/monitoring/loki-values.yaml`** - Loki SingleBinary configuration
+- **`../eks-infrastructure/monitoring/promtail-values.yaml`** - Log collection DaemonSet
+- **`../eks-infrastructure/monitoring/otel-collector-values.yaml`** - Enhanced multi-signal OTEL Collector
+
+### Customization Options
+```bash
+# Edit variables before deployment
+vim terraform/variables.tf
+
+# Key customizable settings:
+# - aws_region (default: us-west-2)
+# - cluster_name (default: eks-otel-crud)
+# - kubernetes_version (default: 1.28)
+# - node_instance_types (default: t3.medium)
+# - grafana_admin_password (default: admin123)
+```
+
+### Troubleshooting Common Issues
+
+**Issue: Loki deployment fails with "Cannot run Scalable targets without object storage"**
+```bash
+# Solution: Ensure Loki is configured for SingleBinary mode
+# Check: eks-infrastructure/monitoring/loki-values.yaml
+# Should have: deploymentMode: SingleBinary
+```
+
+**Issue: Promtail pods in CrashLoopBackOff with volume mount errors**
+```bash
+# Solution: Remove duplicate Docker volume mounts
+# Modern Kubernetes uses containerd, not Docker
+# Check promtail-values.yaml for duplicate /var/lib/docker/containers mounts
+```
+
+**Issue: OTEL Collector fails with schema validation errors**
+```bash
+# Solution: Remove incompatible Helm chart properties
+# Remove: clusterRoleBinding, service.ports from values file
+# Use chart defaults for service configuration
+```
+
+**Issue: Terraform timeout during Helm releases**
+```bash
+# Solution: Increase timeout or apply in stages
+terraform apply -target=module.eks
+terraform apply -target=helm_release.prometheus
+terraform apply  # Apply remaining resources
+```
+
+---
+
+# 📜 Script-based Deployment (Alternative)
 
 ## Phase 1: Infrastructure Setup
 

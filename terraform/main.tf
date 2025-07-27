@@ -4,21 +4,6 @@
 
 terraform {
   required_version = ">= 1.0"
-  
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "~> 2.23"
-    }
-    helm = {
-      source  = "hashicorp/helm"
-      version = "~> 2.11"
-    }
-  }
 }
 
 # Configure the AWS Provider
@@ -42,29 +27,30 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
+# Data source for EKS cluster (evaluated after cluster creation)
+data "aws_eks_cluster" "cluster" {
+  name = module.eks.cluster_name
+  depends_on = [module.eks]
+}
+
+data "aws_eks_cluster_auth" "cluster" {
+  name = module.eks.cluster_name
+  depends_on = [module.eks]
+}
+
 # Configure Kubernetes provider
 provider "kubernetes" {
-  host                   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-  
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "aws"
-    args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
-  }
+  host                   = data.aws_eks_cluster.cluster.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.cluster.token
 }
 
 # Configure Helm provider
 provider "helm" {
   kubernetes {
-    host                   = module.eks.cluster_endpoint
-    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-    
-    exec {
-      api_version = "client.authentication.k8s.io/v1beta1"
-      command     = "aws"
-      args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
-    }
+    host                   = data.aws_eks_cluster.cluster.endpoint
+    cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
+    token                  = data.aws_eks_cluster_auth.cluster.token
   }
 }
 
@@ -110,7 +96,7 @@ module "vpc" {
 # EKS Module
 module "eks" {
   source = "terraform-aws-modules/eks/aws"
-  version = "~> 19.0"
+  version = "~> 20.0"
 
   cluster_name    = local.cluster_name
   cluster_version = var.kubernetes_version
@@ -159,7 +145,8 @@ resource "aws_eks_addon" "ebs_csi" {
   cluster_name             = module.eks.cluster_name
   addon_name               = "aws-ebs-csi-driver"
   addon_version            = var.ebs_csi_driver_version
-  resolve_conflicts        = "OVERWRITE"
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "OVERWRITE"
   service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
 
   tags = local.common_tags
@@ -269,13 +256,55 @@ resource "helm_release" "otel_collector" {
   version    = var.otel_collector_chart_version
 
   values = [
-    file("${path.module}/values/otel-collector-values.yaml")
+    file("${path.module}/../eks-infrastructure/monitoring/otel-collector-values.yaml")
   ]
 
   depends_on = [
     module.eks,
     kubernetes_namespace.tracing,
     helm_release.tempo,
+    helm_release.loki,
+    helm_release.promtail,
+    helm_release.prometheus,
+    aws_eks_addon.ebs_csi
+  ]
+}
+
+# Helm Release: Loki (Logging Backend)
+resource "helm_release" "loki" {
+  name       = "loki"
+  repository = "https://grafana.github.io/helm-charts"
+  chart      = "loki"
+  namespace  = kubernetes_namespace.monitoring.metadata[0].name
+  version    = var.loki_chart_version
+
+  values = [
+    file("${path.module}/../eks-infrastructure/monitoring/loki-values.yaml")
+  ]
+
+  depends_on = [
+    module.eks,
+    kubernetes_namespace.monitoring,
+    aws_eks_addon.ebs_csi
+  ]
+}
+
+# Helm Release: Promtail (Log Shipping)
+resource "helm_release" "promtail" {
+  name       = "promtail"
+  repository = "https://grafana.github.io/helm-charts"
+  chart      = "promtail"
+  namespace  = kubernetes_namespace.monitoring.metadata[0].name
+  version    = var.promtail_chart_version
+
+  values = [
+    file("${path.module}/../eks-infrastructure/monitoring/promtail-values.yaml")
+  ]
+
+  depends_on = [
+    module.eks,
+    kubernetes_namespace.monitoring,
+    helm_release.loki,
     aws_eks_addon.ebs_csi
   ]
 }
@@ -298,116 +327,103 @@ resource "helm_release" "argocd" {
   ]
 }
 
-# ArgoCD Applications (equivalent to the manifests in your shell script)
-resource "kubernetes_manifest" "argocd_app_infrastructure" {
-  manifest = {
-    apiVersion = "argoproj.io/v1alpha1"
-    kind       = "Application"
-    metadata = {
-      name      = "eks-infrastructure"
-      namespace = kubernetes_namespace.argocd.metadata[0].name
-    }
-    spec = {
-      project = "default"
-      source = {
-        repoURL        = var.git_repo_url
-        targetRevision = "HEAD"
-        path           = "eks-infrastructure"
-      }
-      destination = {
-        server    = "https://kubernetes.default.svc"
-        namespace = "default"
-      }
-      syncPolicy = {
-        automated = {
-          prune    = true
-          selfHeal = true
-        }
-      }
-    }
+# ArgoCD Applications (using kubectl instead of kubernetes_manifest)
+resource "null_resource" "argocd_app_infrastructure" {
+  provisioner "local-exec" {
+    command = <<-EOF
+      aws eks update-kubeconfig --region ${var.aws_region} --name ${module.eks.cluster_name}
+      kubectl apply -f - <<YAML
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: eks-infrastructure
+  namespace: ${kubernetes_namespace.argocd.metadata[0].name}
+spec:
+  project: default
+  source:
+    repoURL: ${var.git_repo_url}
+    targetRevision: HEAD
+    path: eks-infrastructure
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+YAML
+    EOF
   }
 
-  depends_on = [helm_release.argocd]
+  depends_on = [helm_release.argocd, data.aws_eks_cluster.cluster]
 }
 
-resource "kubernetes_manifest" "argocd_app_main" {
-  manifest = {
-    apiVersion = "argoproj.io/v1alpha1"
-    kind       = "Application"
-    metadata = {
-      name      = "eks-otel-crud-app"
-      namespace = kubernetes_namespace.argocd.metadata[0].name
-    }
-    spec = {
-      project = "default"
-      source = {
-        repoURL        = var.git_repo_url
-        targetRevision = "HEAD"
-        path           = "k8s"
-      }
-      destination = {
-        server    = "https://kubernetes.default.svc"
-        namespace = "default"
-      }
-      syncPolicy = {
-        automated = {
-          prune    = true
-          selfHeal = true
-        }
-      }
-    }
+resource "null_resource" "argocd_app_main" {
+  provisioner "local-exec" {
+    command = <<-EOF
+      aws eks update-kubeconfig --region ${var.aws_region} --name ${module.eks.cluster_name}
+      kubectl apply -f - <<YAML
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: eks-otel-crud-app
+  namespace: ${kubernetes_namespace.argocd.metadata[0].name}
+spec:
+  project: default
+  source:
+    repoURL: ${var.git_repo_url}
+    targetRevision: HEAD
+    path: k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+YAML
+    EOF
   }
 
-  depends_on = [helm_release.argocd]
+  depends_on = [helm_release.argocd, data.aws_eks_cluster.cluster]
 }
 
-resource "kubernetes_manifest" "argocd_appset" {
-  manifest = {
-    apiVersion = "argoproj.io/v1alpha1"
-    kind       = "ApplicationSet"
-    metadata = {
-      name      = "eks-otel-crud-appset"
-      namespace = kubernetes_namespace.argocd.metadata[0].name
-    }
-    spec = {
-      generators = [
-        {
-          git = {
-            repoURL  = var.git_repo_url
-            revision = "HEAD"
-            directories = [
-              {
-                path = "environments/*"
-              }
-            ]
-          }
-        }
-      ]
-      template = {
-        metadata = {
-          name = "{{path.basename}}"
-        }
-        spec = {
-          project = "default"
-          source = {
-            repoURL        = var.git_repo_url
-            targetRevision = "HEAD"
-            path           = "{{path}}"
-          }
-          destination = {
-            server    = "https://kubernetes.default.svc"
-            namespace = "{{path.basename}}"
-          }
-          syncPolicy = {
-            automated = {
-              prune    = true
-              selfHeal = true
-            }
-          }
-        }
-      }
-    }
+resource "null_resource" "argocd_appset" {
+  provisioner "local-exec" {
+    command = <<-EOF
+      aws eks update-kubeconfig --region ${var.aws_region} --name ${module.eks.cluster_name}
+      kubectl apply -f - <<YAML
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: eks-otel-crud-appset
+  namespace: ${kubernetes_namespace.argocd.metadata[0].name}
+spec:
+  generators:
+  - git:
+      repoURL: ${var.git_repo_url}
+      revision: HEAD
+      directories:
+      - path: environments/*
+  template:
+    metadata:
+      name: '{{path.basename}}'
+    spec:
+      project: default
+      source:
+        repoURL: ${var.git_repo_url}
+        targetRevision: HEAD
+        path: '{{path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{path.basename}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+YAML
+    EOF
   }
 
-  depends_on = [helm_release.argocd]
+  depends_on = [helm_release.argocd, data.aws_eks_cluster.cluster]
 }

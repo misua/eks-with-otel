@@ -1,10 +1,10 @@
-# Loki Configuration for EKS Observability Stack
+# Loki Configuration for EKS Observability Stack - SingleBinary Mode
 # Integrates with existing Grafana for log visualization
 
 # Loki deployment configuration
 loki:
-  # Use simple scalable deployment mode for production
-  deploymentMode: SimpleScalable
+  # Use single binary deployment mode for filesystem storage
+  deploymentMode: SingleBinary
   
   # Storage configuration
   storage:
@@ -50,44 +50,20 @@ loki:
     http_server_read_timeout: 600s
     http_server_write_timeout: 600s
 
-# Backend components configuration
-backend:
-  replicas: 2
+# SingleBinary configuration
+singleBinary:
+  replicas: 1
   persistence:
-    size: 10Gi
+    enabled: true
+    size: 20Gi
     storageClass: gp2
   resources:
     limits:
-      cpu: 500m
-      memory: 1Gi
+      cpu: 1000m
+      memory: 2Gi
     requests:
-      cpu: 100m
-      memory: 256Mi
-
-# Read component configuration  
-read:
-  replicas: 2
-  resources:
-    limits:
-      cpu: 500m
-      memory: 1Gi
-    requests:
-      cpu: 100m
-      memory: 256Mi
-
-# Write component configuration
-write:
-  replicas: 2
-  persistence:
-    size: 10Gi
-    storageClass: gp2
-  resources:
-    limits:
-      cpu: 500m
-      memory: 1Gi
-    requests:
-      cpu: 100m
-      memory: 256Mi
+      cpu: 200m
+      memory: 512Mi
 
 # Gateway configuration (nginx)
 gateway:
@@ -109,9 +85,9 @@ monitoring:
     labels:
       app: loki
   
-  # Self-monitoring rules
+  # Self-monitoring rules (disabled to avoid Grafana Agent CRD requirements)
   selfMonitoring:
-    enabled: true
+    enabled: false
     grafanaAgent:
       installOperator: false
 

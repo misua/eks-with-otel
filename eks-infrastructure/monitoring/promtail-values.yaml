@@ -15,7 +15,7 @@ config:
     
   # Loki client configuration
   clients:
-    - url: http://loki-gateway.logging.svc.cluster.local/loki/api/v1/push
+    - url: http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push
       tenant_id: ""
       
   # Scrape configurations for different log sources
@@ -140,16 +140,10 @@ extraVolumes:
   - name: varlog
     hostPath:
       path: /var/log
-  - name: varlibdockercontainers
-    hostPath:
-      path: /var/lib/docker/containers
 
 extraVolumeMounts:
   - name: varlog
     mountPath: /var/log
-    readOnly: true
-  - name: varlibdockercontainers
-    mountPath: /var/lib/docker/containers
     readOnly: true
 
 # Service monitor for Prometheus

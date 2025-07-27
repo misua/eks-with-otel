@@ -101,6 +101,18 @@ variable "otel_collector_chart_version" {
   default     = "0.88.0"
 }
 
+variable "loki_chart_version" {
+  description = "Version of the Loki Helm chart"
+  type        = string
+  default     = "5.41.4"
+}
+
+variable "promtail_chart_version" {
+  description = "Version of the Promtail Helm chart"
+  type        = string
+  default     = "6.15.3"
+}
+
 variable "argocd_chart_version" {
   description = "Version of the ArgoCD Helm chart"
   type        = string
