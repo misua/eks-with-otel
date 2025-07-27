@@ -19,6 +19,7 @@ func InitTracer(serviceName, serviceVersion, otlpEndpoint string) (func(), error
 		context.Background(),
 		otlptracehttp.WithEndpoint(otlpEndpoint),
 		otlptracehttp.WithInsecure(), // Use insecure connection for demo
+		otlptracehttp.WithURLPath("/v1/traces"), // Explicitly set the path
 	)
 	if err != nil {
 		return nil, err

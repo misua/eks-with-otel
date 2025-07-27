@@ -322,168 +322,51 @@ terraform apply  # Apply remaining resources
 
 ---
 
-# 📜 Script-based Deployment (Alternative)
+# 🚀 Demo Application Deployment
 
-## Phase 1: Infrastructure Setup
+After successfully deploying the infrastructure with Terraform, you can deploy the Go demo CRUD application to generate telemetry data (logs, metrics, and traces).
 
-### Step 1: Deploy EKS Observability Stack
+## Deploy Demo Application via Terraform
+
+The demo application will be automatically deployed as part of the Terraform infrastructure. It includes:
+
+- **Go CRUD API** with OpenTelemetry instrumentation
+- **Load Generator** for continuous traffic
+- **Multi-signal telemetry** (logs, metrics, traces)
+- **Automatic service discovery** and monitoring
+
+### Step 7: Deploy Demo Application (Terraform)
+
 ```bash
-# Clone the repository
-git clone <your-repo-url>
-cd eks-with-otel
+# Enable demo application deployment
+cd terraform
+vim terraform.tfvars  # Add: deploy_demo_app = true
 
-# Make setup script executable
-chmod +x setup-infrastructure.sh
-
-# Deploy the complete observability stack
-./setup-infrastructure.sh
+# Apply Terraform to deploy demo app
+terraform apply
 ```
 
-**What this deploys:**
-- ✅ Prometheus (metrics collection and storage)
-- ✅ Grafana (unified visualization dashboard)
-- ✅ Tempo (distributed tracing storage)
-- ✅ Loki + Promtail (log aggregation and collection)
-- ✅ Enhanced OpenTelemetry Collector (multi-signal telemetry processing)
-- ✅ ArgoCD (GitOps deployment platform)
+**What gets deployed:**
+- ✅ **Go CRUD API** with OpenTelemetry instrumentation
+- ✅ **Load Generator** for continuous traffic generation
+- ✅ **ECR Repository** for container images
+- ✅ **Kubernetes Deployments** with proper resource limits
+- ✅ **Service Discovery** and monitoring integration
 
-### Step 2: Verify Infrastructure Deployment
+### Step 8: Verify Demo Application
 ```bash
-# Check all pods are running (this may take 5-10 minutes)
-kubectl get pods --all-namespaces
-
-# Check specific namespaces
-kubectl get pods -n monitoring
-kubectl get pods -n tracing  
-kubectl get pods -n logging
-kubectl get pods -n argocd
-
-# Wait for all pods to be in Running state
-kubectl wait --for=condition=ready pod --all --all-namespaces --timeout=600s
-```
-
-### Step 3: Access Grafana Dashboard
-```bash
-# Get Grafana admin password
-echo "Grafana Password:"
-kubectl get secret --namespace monitoring grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
-
-# Port forward to access Grafana
-kubectl port-forward --namespace monitoring svc/grafana 3000:80
-
-# Open browser: http://localhost:3000
-# Username: admin
-# Password: (from command above)
-```
-
-**Verify in Grafana:**
-- ✅ Data Sources: Prometheus, Loki, Tempo should all be connected
-- ✅ Dashboards: Default dashboards should be available
-- ✅ Explore: You should be able to query each data source
-
----
-
-## Phase 2: Demo Application Deployment
-
-### Step 4: Prepare Demo Application
-```bash
-# Navigate to demo app directory
-cd demo-app
-
-# Test build locally (optional)
-go mod download
-go build -o demo-app ./cmd/api
-go build -o loadgen ./cmd/loadgen
-
-# Clean up test binaries
-rm -f demo-app loadgen
-```
-
-### Step 5: Build and Push Docker Image
-
-**For AWS ECR:**
-```bash
-# Set your AWS account ID and region
-AWS_ACCOUNT_ID="123456789012"  # Replace with your AWS account ID
-AWS_REGION="us-west-2"         # Replace with your region
-REGISTRY="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
-IMAGE_NAME="eks-otel-demo"
-
-# Create ECR repository (if it doesn't exist)
-aws ecr create-repository --repository-name $IMAGE_NAME --region $AWS_REGION || true
-
-# Login to ECR
-aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REGISTRY
-
-# Build Docker image
-docker build -t $IMAGE_NAME:latest .
-
-# Tag for registry
-docker tag $IMAGE_NAME:latest $REGISTRY/$IMAGE_NAME:latest
-
-# Push to registry
-docker push $REGISTRY/$IMAGE_NAME:latest
-
-echo "Image pushed to: $REGISTRY/$IMAGE_NAME:latest"
-```
-
-**For other registries (Docker Hub, etc.):**
-```bash
-# Replace with your registry
-REGISTRY="your-dockerhub-username"  # or your-registry.com
-IMAGE_NAME="eks-otel-demo"
-
-# Build and push
-docker build -t $IMAGE_NAME:latest .
-docker tag $IMAGE_NAME:latest $REGISTRY/$IMAGE_NAME:latest
-docker push $REGISTRY/$IMAGE_NAME:latest
-```
-
-### Step 6: Update Kubernetes Manifests
-```bash
-# Update the image reference in deployment files
-sed -i "s|your-registry|$REGISTRY|g" k8s-deployment.yaml
-sed -i "s|your-registry|$REGISTRY|g" k8s-loadgen.yaml
-
-# Verify the changes
-grep "image:" k8s-deployment.yaml
-grep "image:" k8s-loadgen.yaml
-```
-
-### Step 7: Deploy Demo Application to EKS
-```bash
-# Deploy the demo CRUD application
-kubectl apply -f k8s-deployment.yaml
-
-# Wait for deployment to be ready
-kubectl wait --for=condition=available --timeout=300s deployment/eks-otel-demo
-
-# Verify deployment
+# Check demo app pods
 kubectl get pods -l app=eks-otel-demo
-kubectl get service eks-otel-demo-service
 
-# Check application logs
-kubectl logs -l app=eks-otel-demo --tail=20
-```
-
-### Step 8: Deploy Automated Load Generator
-```bash
-# Deploy continuous load generator
-kubectl apply -f k8s-loadgen.yaml
-
-# Wait for load generator to start
-kubectl wait --for=condition=available --timeout=300s deployment/eks-otel-loadgen
-
-# Verify load generator is running
+# Check load generator pods
 kubectl get pods -l app=eks-otel-loadgen
 
-# Check load generator logs
+# View application logs
+kubectl logs -l app=eks-otel-demo --tail=20
+
+# View load generator logs
 kubectl logs -l app=eks-otel-loadgen --tail=20
 ```
-
----
-
-## Phase 3: Validation & Testing
 
 ### Step 9: Test Demo Application
 ```bash
@@ -491,80 +374,34 @@ kubectl logs -l app=eks-otel-loadgen --tail=20
 kubectl port-forward service/eks-otel-demo-service 8080:80
 
 # In another terminal, test the endpoints:
-
 # Health check
 curl http://localhost:8080/health
 
 # Create an item
 curl -X POST http://localhost:8080/api/v1/items \
   -H "Content-Type: application/json" \
-  -d '{"name": "Test Item from EKS", "description": "Testing the deployed application"}'
+  -d '{"name": "Test Item", "description": "Testing observability"}'
 
 # List all items
 curl http://localhost:8080/api/v1/items
-
-# Get service info
-curl http://localhost:8080/
 ```
 
-### Step 10: Validate Observability Data in Grafana
+### Step 10: Validate Multi-Signal Observability in Grafana
 
-**Access Grafana (if not already open):**
+**Access Grafana:**
 ```bash
-kubectl port-forward --namespace monitoring svc/grafana 3000:80
-# Open: http://localhost:3000
+kubectl port-forward -n monitoring svc/prometheus-grafana 3000:80
+# Open: http://localhost:3000 (admin/admin123)
 ```
 
-#### Check Logs in Loki
-1. Go to **Explore** → Select **Loki** data source
-2. Use query: `{service_name="eks-otel-demo"}`
-3. You should see structured JSON logs with trace correlation
-4. Look for fields: `trace_id`, `span_id`, `method`, `path`, `status_code`
+**Validate Data Sources:**
+- ✅ **Loki**: Query `{app="eks-otel-demo"}` to see application logs
+- ✅ **Tempo**: Search service `eks-otel-demo` to see distributed traces  
+- ✅ **Prometheus**: Query `http_requests_total{job="eks-otel-demo"}` for metrics
 
-#### Check Traces in Tempo
-1. Go to **Explore** → Select **Tempo** data source  
-2. Search by **Service Name**: `eks-otel-demo`
-3. You should see distributed traces for HTTP requests and storage operations
-4. Click on traces to see detailed span information
-
-#### Check Metrics in Prometheus
-1. Go to **Explore** → Select **Prometheus** data source
-2. Try queries:
-   - `http_requests_total{service="eks-otel-demo"}`
-   - `http_request_duration_seconds{service="eks-otel-demo"}`
-   - `up{job="eks-otel-demo"}`
-
-#### Verify Trace/Log Correlation
-1. In **Loki**, find a log entry with a `trace_id`
-2. Copy the `trace_id` value
-3. In **Tempo**, search by that trace ID
-4. You should see the corresponding trace with all related spans
-
----
-
-## Phase 4: Continuous Load Testing
-
-### Step 11: Monitor Automated Load Generation
-```bash
-# Watch load generator in action
-kubectl logs -l app=eks-otel-loadgen -f
-
-# Watch demo app handling requests
-kubectl logs -l app=eks-otel-demo -f
-
-# Check resource usage
-kubectl top pods -l app=eks-otel-demo
-kubectl top pods -l app=eks-otel-loadgen
-```
-
-### Step 12: Optional - Run Additional Load Testing
-```bash
-# Port forward demo app (if not already done)
-kubectl port-forward service/eks-otel-demo-service 8080:80
-
-# Run local load generator for intensive testing
-./run-loadgen.sh http://localhost:8080 10m 5
-```
+**Verify Trace/Log Correlation:**
+- Logs contain `trace_id` fields that link directly to traces in Tempo
+- Complete observability pipeline: **Logs** ↔ **Traces** ↔ **Metrics**
 
 ---
 

@@ -133,6 +133,31 @@ variable "git_repo_url" {
   default     = "https://github.com/yourusername/eks-otel-crud.git"
 }
 
+# Demo Application Configuration
+variable "deploy_demo_app" {
+  description = "Whether to deploy the demo CRUD application"
+  type        = bool
+  default     = true
+}
+
+variable "demo_app_image" {
+  description = "Docker image for the demo application"
+  type        = string
+  default     = "public.ecr.aws/docker/library/golang:1.21-alpine"
+}
+
+variable "demo_app_replicas" {
+  description = "Number of replicas for the demo application"
+  type        = number
+  default     = 2
+}
+
+variable "loadgen_replicas" {
+  description = "Number of replicas for the load generator"
+  type        = number
+  default     = 1
+}
+
 # Tags
 variable "additional_tags" {
   description = "Additional tags to apply to resources"

@@ -237,7 +237,7 @@ resource "helm_release" "tempo" {
   version    = var.tempo_chart_version
 
   values = [
-    file("${path.module}/values/tempo-values.yaml")
+    file("${path.module}/values/monitoring/tempo-values.yaml")
   ]
 
   depends_on = [
@@ -256,7 +256,7 @@ resource "helm_release" "otel_collector" {
   version    = var.otel_collector_chart_version
 
   values = [
-    file("${path.module}/../eks-infrastructure/monitoring/otel-collector-values.yaml")
+    file("${path.module}/values/monitoring/otel-collector-values.yaml")
   ]
 
   depends_on = [
@@ -279,7 +279,7 @@ resource "helm_release" "loki" {
   version    = var.loki_chart_version
 
   values = [
-    file("${path.module}/../eks-infrastructure/monitoring/loki-values.yaml")
+    file("${path.module}/values/monitoring/loki-values.yaml")
   ]
 
   depends_on = [
@@ -298,7 +298,7 @@ resource "helm_release" "promtail" {
   version    = var.promtail_chart_version
 
   values = [
-    file("${path.module}/../eks-infrastructure/monitoring/promtail-values.yaml")
+    file("${path.module}/values/monitoring/promtail-values.yaml")
   ]
 
   depends_on = [

@@ -69,11 +69,14 @@ grafana:
     isDefault: false
     jsonData:
       maxLines: 1000
+      httpHeaderName1: 'X-Scope-OrgID'
       derivedFields:
         - datasourceUid: tempo
           matcherRegex: "traceID=(\\w+)"
           name: TraceID
           url: "$${__value.raw}"
+    secureJsonData:
+      httpHeaderValue1: 'fake'
   - name: Tempo
     type: tempo
     url: http://tempo.tracing.svc.cluster.local:3100
