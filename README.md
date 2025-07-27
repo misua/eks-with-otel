@@ -3,8 +3,9 @@
 **What's Included:**
 - 🏗️ **EKS Cluster Setup** - Automated cluster provisioning with managed node groups
 - 📊 **Monitoring Stack** - Prometheus + Grafana with persistent storage
+- 📝 **Logging Stack** - Loki + Promtail for log aggregation and visualization
 - 🔍 **Distributed Tracing** - Tempo for OpenTelemetry trace collection
-- 🔗 **OpenTelemetry Collector** - Centralized trace collection and processing to send traces to Tempo
+- 🔗 **OpenTelemetry Collector** - Centralized observability data collection and processing
 - 🚀 **GitOps Deployment** - ArgoCD for continuous deployment
 - 🛠️ **Infrastructure as Code** - Terraform configurations for reproducible deployments
 - 📜 **Setup & Teardown Scripts** - One-command infrastructure lifecycle management
@@ -15,7 +16,6 @@
 - 🔍 **Trivy** - Comprehensive vulnerability scanner for containers, IaC, and Kubernetes manifests
 - 📢 **Slack Alerts** - Real-time notifications for monitoring alerts, deployment status, and security events
 - 🚨 **Falco** - Runtime security monitoring for detecting anomalous behavior and security threats
-- 📝 **Loki** - Log aggregation system to complete the observability trinity (metrics, traces, logs)
 - 🔔 **AlertManager** - Advanced alerting rules, routing, and notification management
 - ⚡ **Karpenter** - Intelligent node provisioning and autoscaling for cost-optimized workload scheduling
 
@@ -43,11 +43,17 @@ graph TD
                 
                 subgraph Monitoring ["Monitoring Namespace"]
                     Prometheus["Prometheus - Metrics Collection"]
-                    Grafana["Grafana - Metrics Visualization"]
+                    Grafana["Grafana - Unified Observability Dashboard"]
+                end
+                
+                subgraph Logging ["Logging Namespace"]
+                    Loki["Loki - Log Aggregation"]
+                    Promtail["Promtail - Log Collection"]
                 end
                 
                 subgraph Tracing ["Tracing Namespace"]
                     Tempo["Tempo - Distributed Tracing"]
+                    OTelCollector["OpenTelemetry Collector"]
                 end
                 
                 subgraph GitOps ["ArgoCD Namespace"]
@@ -94,6 +100,321 @@ graph TD
     Worker_Nodes -.-> Prometheus
     Worker_Nodes -.-> Tempo
     Prometheus --- Grafana
+```
+
+## 📝 Logging Infrastructure
+
+The logging stack provides comprehensive log aggregation and visualization using Loki and Promtail, integrated with Grafana for unified observability.
+
+### Components
+
+#### Loki (Log Aggregation)
+- **Purpose**: Horizontally scalable log aggregation system
+- **Storage**: Filesystem-based storage with 7-day retention
+- **Architecture**: SimpleScalable deployment mode with separate read/write/backend components
+- **Integration**: Native Grafana data source with trace correlation
+
+#### Promtail (Log Collection)
+- **Purpose**: Log shipping agent that collects logs from Kubernetes
+- **Deployment**: DaemonSet running on all nodes
+- **Sources**: 
+  - Kubernetes pod logs (stdout/stderr)
+  - Node system logs (journal)
+- **Processing**: CRI log parsing, label extraction, and filtering
+
+### Log Flow Architecture
+
+```mermaid
+flowchart LR
+    subgraph "Kubernetes Cluster"
+        subgraph "Application Pods"
+            App1["App Pod 1"]
+            App2["App Pod 2"]
+            App3["App Pod N"]
+        end
+        
+        subgraph "System Components"
+            Kubelet["Kubelet"]
+            SystemD["SystemD Journal"]
+        end
+        
+        subgraph "Log Collection (DaemonSet)"
+            PT1["Promtail Agent 1"]
+            PT2["Promtail Agent 2"]
+            PT3["Promtail Agent N"]
+        end
+        
+        subgraph "Logging Namespace"
+            LokiGW["Loki Gateway"]
+            LokiWrite["Loki Write"]
+            LokiRead["Loki Read"]
+            LokiBackend["Loki Backend"]
+        end
+        
+        subgraph "Monitoring Namespace"
+            Grafana["Grafana Dashboard"]
+        end
+    end
+    
+    App1 --> PT1
+    App2 --> PT2
+    App3 --> PT3
+    Kubelet --> PT1
+    SystemD --> PT2
+    
+    PT1 --> LokiGW
+    PT2 --> LokiGW
+    PT3 --> LokiGW
+    
+    LokiGW --> LokiWrite
+    LokiGW --> LokiRead
+    LokiWrite --> LokiBackend
+    LokiRead --> LokiBackend
+    
+    LokiRead --> Grafana
+    
+    style App1 fill:#e1f5fe
+    style App2 fill:#e1f5fe
+    style App3 fill:#e1f5fe
+    style PT1 fill:#f3e5f5
+    style PT2 fill:#f3e5f5
+    style PT3 fill:#f3e5f5
+    style LokiGW fill:#e8f5e8
+    style LokiWrite fill:#e8f5e8
+    style LokiRead fill:#e8f5e8
+    style LokiBackend fill:#e8f5e8
+    style Grafana fill:#fff3e0
+```
+
+### Configuration Files
+
+- **`loki-values.yaml`**: Loki deployment configuration with SimpleScalable mode
+- **`promtail-values.yaml`**: Promtail DaemonSet configuration for log collection
+- **`prometheus-values.yaml`**: Updated Grafana configuration with Loki data source
+
+### Log Labels and Parsing
+
+Promtail automatically adds these labels to collected logs:
+- `namespace`: Kubernetes namespace
+- `pod`: Pod name
+- `container`: Container name
+- `app`: Application label (if present)
+- `service`: Service name (if present)
+- `node`: Node name
+- `job`: Collection job name
+
+### Accessing Logs
+
+1. **Via Grafana**: 
+   - Access Grafana dashboard
+   - Use "Explore" tab with Loki data source
+   - Query logs using LogQL syntax
+
+2. **Direct Loki Access**:
+   ```bash
+   kubectl port-forward svc/loki-gateway -n logging 3100:80
+   curl "http://localhost:3100/loki/api/v1/query_range?query={namespace=\"default\"}"
+   ```
+
+3. **Common LogQL Queries**:
+   ```logql
+   # All logs from a specific namespace
+   {namespace="default"}
+   
+   # Error logs across all pods
+   {} |= "error" or "ERROR"
+   
+   # Logs from specific application
+   {app="my-app"} | json
+   
+   # Rate of error logs
+   rate({} |= "error" [5m])
+   ```
+
+## 🔗 OpenTelemetry Collector
+
+The enhanced OpenTelemetry Collector serves as the central hub for all observability data, collecting, processing, and routing traces, metrics, and logs to their respective backends.
+
+### Architecture Overview
+
+The collector is deployed as a Kubernetes deployment with 2 replicas, providing high availability and load distribution for telemetry data processing.
+
+```mermaid
+flowchart TB
+    subgraph "Applications"
+        App1["Application 1"]
+        App2["Application 2"]
+        App3["Application N"]
+    end
+    
+    subgraph "OpenTelemetry Collector"
+        subgraph "Receivers"
+            OTLP["OTLP Receiver<br/>(gRPC/HTTP)"]
+            Jaeger["Jaeger Receiver<br/>(Legacy Support)"]
+            Prometheus["Prometheus Receiver<br/>(Metrics Scraping)"]
+            HostMetrics["Host Metrics<br/>(System Metrics)"]
+        end
+        
+        subgraph "Processors"
+            Batch["Batch Processor"]
+            Memory["Memory Limiter"]
+            K8sAttrib["K8s Attributes"]
+            Resource["Resource Detection"]
+            Transform["Transform Processor"]
+        end
+        
+        subgraph "Exporters"
+            TempoExp["Tempo Exporter"]
+            LokiExp["Loki Exporter"]
+            PrometheusExp["Prometheus Remote Write"]
+            Debug["Debug Exporter"]
+        end
+    end
+    
+    subgraph "Backends"
+        Tempo["Tempo<br/>(Traces)"]
+        Loki["Loki<br/>(Logs)"]
+        PrometheusDB["Prometheus<br/>(Metrics)"]
+    end
+    
+    App1 --> OTLP
+    App2 --> OTLP
+    App3 --> OTLP
+    
+    OTLP --> Batch
+    Jaeger --> Batch
+    Prometheus --> Batch
+    HostMetrics --> Batch
+    
+    Batch --> Memory
+    Memory --> K8sAttrib
+    K8sAttrib --> Resource
+    Resource --> Transform
+    
+    Transform --> TempoExp
+    Transform --> LokiExp
+    Transform --> PrometheusExp
+    Transform --> Debug
+    
+    TempoExp --> Tempo
+    LokiExp --> Loki
+    PrometheusExp --> PrometheusDB
+    
+    style OTLP fill:#e1f5fe
+    style Batch fill:#f3e5f5
+    style Memory fill:#f3e5f5
+    style K8sAttrib fill:#f3e5f5
+    style TempoExp fill:#e8f5e8
+    style LokiExp fill:#e8f5e8
+    style PrometheusExp fill:#e8f5e8
+```
+
+### Enhanced Features
+
+#### Multi-Signal Processing
+- **Traces**: OTLP and Jaeger protocol support with correlation IDs
+- **Metrics**: Application metrics via OTLP + system metrics via host metrics receiver
+- **Logs**: OTLP log ingestion with structured log processing
+
+#### Kubernetes Integration
+- **K8s Attributes Processor**: Automatically enriches telemetry with Kubernetes metadata
+- **Resource Detection**: Identifies cluster, node, and pod information
+- **RBAC Configuration**: Proper permissions for Kubernetes API access
+
+#### Advanced Processing
+- **Batch Processing**: Optimized data transmission with configurable batch sizes
+- **Memory Management**: Prevents OOM with memory limiting and spike protection
+- **Attribute Enhancement**: Consistent metadata across all signals
+- **Transform Processing**: Log parsing and enrichment
+
+### Configuration Files
+
+- **`otel-collector-values.yaml`**: Enhanced multi-signal collector configuration
+- **`otel-collector-values.yaml.backup`**: Backup of original traces-only configuration
+- **`validate-otel-config.sh`**: Configuration validation and testing script
+
+### Data Pipelines
+
+#### Traces Pipeline
+```yaml
+traces:
+  receivers: [otlp, jaeger]
+  processors: [memory_limiter, resourcedetection, k8sattributes, attributes, batch]
+  exporters: [otlp/tempo, debug]
+```
+
+#### Metrics Pipeline
+```yaml
+metrics:
+  receivers: [otlp, prometheus, hostmetrics]
+  processors: [memory_limiter, resourcedetection, k8sattributes, attributes, batch]
+  exporters: [prometheusremotewrite, debug]
+```
+
+#### Logs Pipeline
+```yaml
+logs:
+  receivers: [otlp]
+  processors: [memory_limiter, resourcedetection, k8sattributes, attributes, transform, batch]
+  exporters: [loki, debug]
+```
+
+### Resource Configuration
+
+- **CPU**: 1000m limit, 200m request (increased for multi-signal processing)
+- **Memory**: 1Gi limit, 256Mi request (increased for buffering and processing)
+- **Replicas**: 2 (high availability)
+
+### Endpoints and Ports
+
+| Protocol | Port | Purpose |
+|----------|------|----------|
+| OTLP gRPC | 4317 | Primary OpenTelemetry protocol |
+| OTLP HTTP | 4318 | HTTP variant of OTLP |
+| Jaeger gRPC | 14250 | Legacy Jaeger traces |
+| Jaeger HTTP | 14268 | Legacy Jaeger traces |
+| Jaeger UDP | 6831 | Legacy Jaeger traces |
+| Metrics | 8888 | Collector self-monitoring |
+
+### Monitoring and Observability
+
+The collector monitors itself and exports metrics about:
+- Data processing rates and latencies
+- Memory and CPU usage
+- Queue sizes and backpressure
+- Export success/failure rates
+- Pipeline health status
+
+### Validation and Testing
+
+Use the validation script to test configuration before deployment:
+
+```bash
+# Validate enhanced configuration
+./scripts/validate-otel-config.sh
+
+# Deploy enhanced collector
+helm upgrade otel-collector open-telemetry/opentelemetry-collector \
+  -n tracing \
+  -f eks-infrastructure/monitoring/otel-collector-values.yaml
+
+# Monitor deployment
+kubectl logs -f deployment/otel-collector -n tracing
+```
+
+### Rollback Procedure
+
+If issues occur with the enhanced configuration:
+
+```bash
+# Restore backup configuration
+cp eks-infrastructure/monitoring/otel-collector-values.yaml.backup \
+   eks-infrastructure/monitoring/otel-collector-values.yaml
+
+# Redeploy with original configuration
+helm upgrade otel-collector open-telemetry/opentelemetry-collector \
+  -n tracing \
+  -f eks-infrastructure/monitoring/otel-collector-values.yaml
 ```
 
 ## 📋 Prerequisites Check
