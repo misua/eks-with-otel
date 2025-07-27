@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eks-otel-loadgen
+  namespace: default
+  labels:
+    app: eks-otel-loadgen
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eks-otel-loadgen
+  template:
+    metadata:
+      labels:
+        app: eks-otel-loadgen
+    spec:
+      containers:
+      - name: loadgen
+        image: your-registry/eks-otel-demo:latest  # Same image, different entrypoint
+        command: ["./loadgen"]
+        env:
+        - name: DEMO_APP_URL
+          value: "http://eks-otel-demo-service.default.svc.cluster.local"
+        - name: LOAD_DURATION
+          value: "24h"  # Run continuously
+        - name: CONCURRENCY
+          value: "2"    # Light continuous load
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "25m"
+          limits:
+            memory: "64Mi"
+            cpu: "50m"
+        # Restart policy to keep generating load
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "ps aux | grep loadgen | grep -v grep"
+          initialDelaySeconds: 30
+          periodSeconds: 60
+---
+# Optional: CronJob for periodic load testing
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: eks-otel-loadgen-cron
+  namespace: default
+spec:
+  # Run every hour for 10 minutes
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: loadgen
+            image: your-registry/eks-otel-demo:latest
+            command: ["./loadgen"]
+            env:
+            - name: DEMO_APP_URL
+              value: "http://eks-otel-demo-service.default.svc.cluster.local"
+            - name: LOAD_DURATION
+              value: "10m"  # 10 minutes every hour
+            - name: CONCURRENCY
+              value: "3"
+            resources:
+              requests:
+                memory: "32Mi"
+                cpu: "25m"
+              limits:
+                memory: "64Mi"
+                cpu: "50m"
+          restartPolicy: OnFailure
