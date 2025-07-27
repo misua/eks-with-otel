@@ -10,6 +10,102 @@ A complete, production-ready observability solution for Amazon EKS with OpenTele
 - ✅ **Unified Grafana Dashboards** - Correlated logs, traces, and metrics
 - ✅ **GitOps with ArgoCD** - Automated deployment and management
 
+## 🏗️ Architecture Overview
+
+```mermaid
+flowchart TB
+    subgraph "GitOps & Deployment"
+        Git["Git Repository<br/>📁 Helm Charts & Configs"]
+        ArgoCD["ArgoCD<br/>🔄 GitOps Controller"]
+        Git --> ArgoCD
+    end
+
+    subgraph "EKS Cluster"
+        subgraph "Applications"
+            DemoApp["Demo CRUD App<br/>🚀 Go Application"]
+            LoadGen["Load Generator<br/>📊 Traffic Simulator"]
+        end
+        
+        subgraph "OpenTelemetry Collection"
+            OTELCol["OTEL Collector<br/>🔧 Multi-Signal Processor"]
+        end
+        
+        subgraph "Log Collection"
+            Promtail["Promtail<br/>📝 Log Shipper"]
+            K8sLogs["Kubernetes Logs<br/>📋 Node & Pod Logs"]
+        end
+        
+        subgraph "Observability Stack"
+            subgraph "Storage Backends"
+                Prometheus["Prometheus<br/>📈 Metrics Storage"]
+                Loki["Loki<br/>📄 Log Storage"]
+                Tempo["Tempo<br/>🔍 Trace Storage"]
+            end
+            
+            subgraph "Visualization"
+                Grafana["Grafana<br/>📊 Unified Dashboard"]
+            end
+        end
+    end
+
+    %% Data Flow: Applications to OTEL Collector
+    DemoApp -->|"OTLP HTTP/gRPC<br/>Traces + Metrics + Logs"| OTELCol
+    LoadGen -->|"OTLP HTTP/gRPC<br/>Traces + Metrics + Logs"| OTELCol
+    
+    %% Data Flow: Kubernetes Logs
+    K8sLogs -->|"Log Files<br/>/var/log/pods"| Promtail
+    Promtail -->|"Push API<br/>Structured Logs"| Loki
+    
+    %% Data Flow: OTEL Collector to Backends
+    OTELCol -->|"Remote Write<br/>Application Metrics"| Prometheus
+    OTELCol -->|"Push API<br/>Structured Logs"| Loki
+    OTELCol -->|"OTLP<br/>Distributed Traces"| Tempo
+    
+    %% Data Flow: Backends to Grafana
+    Prometheus -->|"PromQL Queries<br/>Metrics Data"| Grafana
+    Loki -->|"LogQL Queries<br/>Log Data"| Grafana
+    Tempo -->|"TraceQL Queries<br/>Trace Data"| Grafana
+    
+    %% GitOps Flow
+    ArgoCD -->|"Helm Deployments"| Prometheus
+    ArgoCD -->|"Helm Deployments"| Loki
+    ArgoCD -->|"Helm Deployments"| Tempo
+    ArgoCD -->|"Helm Deployments"| Grafana
+    ArgoCD -->|"Helm Deployments"| OTELCol
+    ArgoCD -->|"Helm Deployments"| Promtail
+    ArgoCD -->|"Kubectl Apply"| DemoApp
+    ArgoCD -->|"Kubectl Apply"| LoadGen
+
+    %% Styling
+    classDef appStyle fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef otelStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef storageStyle fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    classDef gitopsStyle fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef logStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    
+    class DemoApp,LoadGen appStyle
+    class OTELCol otelStyle
+    class Prometheus,Loki,Tempo,Grafana storageStyle
+    class Git,ArgoCD gitopsStyle
+    class Promtail,K8sLogs logStyle
+```
+
+### 🔄 Data Flow Explanation
+
+1. **Application Telemetry**: Demo app and load generator send traces, metrics, and logs via OTLP to the OpenTelemetry Collector
+2. **Kubernetes Logs**: Promtail DaemonSet collects logs from all pods and nodes, forwarding them to Loki
+3. **Signal Processing**: OTEL Collector processes, enriches, and routes telemetry data to appropriate backends
+4. **Storage**: Prometheus stores metrics, Loki stores logs, Tempo stores traces
+5. **Visualization**: Grafana queries all backends to provide unified dashboards with correlated observability data
+6. **GitOps**: ArgoCD monitors Git repository and automatically deploys/updates all infrastructure components
+
+### 🎯 Key Integration Points
+
+- **Trace Correlation**: Logs include trace IDs for seamless correlation in Grafana
+- **Kubernetes Metadata**: OTEL Collector enriches all telemetry with pod, namespace, and node information
+- **Unified Querying**: Single Grafana interface for metrics (PromQL), logs (LogQL), and traces (TraceQL)
+- **Automated Deployment**: ArgoCD ensures infrastructure and applications stay in sync with Git repository
+
 ## 🚀 Prerequisites
 
 - AWS CLI configured with appropriate permissions
