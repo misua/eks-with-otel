@@ -68,6 +68,7 @@ config:
     memory_limiter:
       limit_mib: 1024
       spike_limit_mib: 256
+      check_interval: 1s
     
     # Resource detection processor
     resourcedetection:
