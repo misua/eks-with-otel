@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: demo-app
-        image: your-registry/eks-otel-demo:latest  # Update this with your container registry
+        image: 173961276139.dkr.ecr.us-west-2.amazonaws.com/eks-otel-demo:latest
         ports:
         - containerPort: 8080
         env:
