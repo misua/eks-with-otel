@@ -1,0 +1,58 @@
+# Grafana Tempo Configuration for Terraform
+# Corrected configuration using local filesystem backend
+
+# Enable/disable components and set replica counts
+# These are Helm chart values, not Tempo application config
+
+ingester:
+  replicas: 1
+
+distributor:
+  replicas: 1
+
+queryFrontend:
+  replicas: 1
+
+compactor:
+  replicas: 1
+
+# This is the configuration for the Tempo application itself
+# It will be mounted as the tempo.yaml config file
+tempo:
+  # Storage configuration - using local filesystem for simplicity
+  storage:
+    trace:
+      backend: local
+      local:
+        path: /tmp/tempo/traces
+
+  # Server configuration
+  server:
+    http_listen_port: 3100 # Align with Kubernetes service port
+
+  # Distributor receiver configuration
+  distributor:
+    receivers:
+      otlp:
+        protocols:
+          http:
+            enabled: true
+          grpc:
+            enabled: true
+      jaeger:
+        protocols:
+          thrift_http:
+            enabled: true
+          grpc:
+            enabled: true
+          thrift_compact:
+            enabled: true
+
+# Disable persistence when using local storage
+persistence:
+  enabled: false
+
+# Service Monitor for Prometheus
+metrics:
+  serviceMonitor:
+    enabled: true

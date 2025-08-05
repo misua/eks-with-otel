@@ -1,0 +1,152 @@
+# Loki Configuration for EKS Observability Stack - SingleBinary Mode
+# Integrates with existing Grafana for log visualization
+
+# Loki deployment configuration
+loki:
+  # Use single binary deployment mode for filesystem storage
+  deploymentMode: SingleBinary
+  
+  # Storage configuration
+  storage:
+    type: filesystem
+    filesystem:
+      chunks_directory: /var/loki/chunks
+      rules_directory: /var/loki/rules
+    
+  # Schema configuration for log storage
+  schemaConfig:
+    configs:
+      - from: 2024-04-01
+        store: tsdb
+        object_store: filesystem
+        schema: v13
+        index:
+          prefix: loki_index_
+          period: 24h
+  
+  # Limits configuration
+  limits_config:
+    retention_period: 168h  # 7 days retention
+    enforce_metric_name: false
+    reject_old_samples: true
+    reject_old_samples_max_age: 168h
+    max_cache_freshness_per_query: 10m
+    split_queries_by_interval: 15m
+    per_stream_rate_limit: 3MB
+    per_stream_rate_limit_burst: 15MB
+    ingestion_rate_mb: 10
+    ingestion_burst_size_mb: 20
+    max_streams_per_user: 10000
+    max_line_size: 256000
+
+  # Common configuration
+  commonConfig:
+    replication_factor: 1
+    
+  # Server configuration
+  server:
+    grpc_server_max_recv_msg_size: 104857600
+    grpc_server_max_send_msg_size: 104857600
+    http_server_read_timeout: 600s
+    http_server_write_timeout: 600s
+
+# SingleBinary configuration
+singleBinary:
+  replicas: 1
+  persistence:
+    enabled: true
+    size: 20Gi
+    storageClass: gp2
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 200m
+      memory: 512Mi
+
+# Gateway configuration (nginx)
+gateway:
+  enabled: true
+  replicas: 1
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+# Monitoring configuration
+monitoring:
+  serviceMonitor:
+    enabled: true
+    namespace: monitoring
+    labels:
+      app: loki
+  
+  # Self-monitoring rules (disabled to avoid Grafana Agent CRD requirements)
+  selfMonitoring:
+    enabled: false
+    grafanaAgent:
+      installOperator: false
+
+# Test configuration
+test:
+  enabled: false
+
+# Memcached for caching (optional but recommended)
+memcached:
+  enabled: true
+  
+memcachedExporter:
+  enabled: true
+
+# Memcached chunks cache
+memcachedChunks:
+  enabled: true
+  replicas: 1
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+# Memcached frontend cache  
+memcachedFrontend:
+  enabled: true
+  replicas: 1
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+# Memcached index queries cache
+memcachedIndexQueries:
+  enabled: true
+  replicas: 1
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 3100
+  
+# Ingress configuration (disabled, using internal access)
+ingress:
+  enabled: false
+
+# Network policy
+networkPolicy:
+  enabled: false

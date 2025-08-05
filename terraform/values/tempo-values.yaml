@@ -28,7 +28,7 @@ tempo:
 
   # Server configuration
   server:
-    http_listen_port: 3200 # Default is 3200 in the chart
+    http_listen_port: 3100 # Align with Kubernetes service port
 
   # Distributor receiver configuration
   distributor:

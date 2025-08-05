@@ -60,8 +60,38 @@ grafana:
           path: /var/lib/grafana/dashboards/default
   dashboards:
     default: {}
-  # Datasources are automatically configured by kube-prometheus-stack
-  # No manual datasource configuration needed
+  # Additional data sources for complete observability stack
+  additionalDataSources:
+  - name: Loki
+    type: loki
+    url: http://loki.monitoring.svc.cluster.local:3100
+    access: proxy
+    isDefault: false
+    jsonData:
+      maxLines: 1000
+      httpHeaderName1: 'X-Scope-OrgID'
+      derivedFields:
+        - datasourceUid: tempo
+          matcherRegex: "traceID=(\\w+)"
+          name: TraceID
+          url: "$${__value.raw}"
+    secureJsonData:
+      httpHeaderValue1: 'fake'
+  - name: Tempo
+    type: tempo
+    url: http://tempo.tracing.svc.cluster.local:3100
+    access: proxy
+    isDefault: false
+    jsonData:
+      httpMethod: GET
+      serviceMap:
+        datasourceUid: prometheus
+      search:
+        hide: false
+      nodeGraph:
+        enabled: true
+      lokiSearch:
+        datasourceUid: loki
 
 alertmanager:
   enabled: true

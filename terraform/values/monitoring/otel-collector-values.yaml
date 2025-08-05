@@ -1,0 +1,202 @@
+# Enhanced OpenTelemetry Collector Configuration
+# Collects traces, logs, and metrics from applications
+# Forwards to Tempo (traces), Loki (logs), and Prometheus (metrics)
+
+# Image configuration
+image:
+  repository: otel/opentelemetry-collector-contrib
+  tag: "0.91.0"
+  pullPolicy: IfNotPresent
+
+# Deployment mode - can be daemonset, deployment, or statefulset
+mode: deployment
+
+# Number of replicas for deployment mode
+replicaCount: 2
+
+# OpenTelemetry Collector configuration
+config:
+  receivers:
+    # OTLP receiver for OpenTelemetry protocol (traces, metrics, logs)
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+    
+    # Jaeger receiver for Jaeger protocol compatibility (traces only)
+    jaeger:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:14250
+        thrift_http:
+          endpoint: 0.0.0.0:14268
+        thrift_compact:
+          endpoint: 0.0.0.0:6831
+    
+    # Prometheus receiver for scraping metrics
+    prometheus:
+      config:
+        scrape_configs:
+          - job_name: 'otel-collector'
+            scrape_interval: 30s
+            static_configs:
+              - targets: ['0.0.0.0:8888']
+    
+    # Host metrics receiver for system metrics
+    hostmetrics:
+      collection_interval: 30s
+      scrapers:
+        cpu: {}
+        disk: {}
+        filesystem: {}
+        memory: {}
+        network: {}
+        process: {}
+    
+
+
+  processors:
+    # Batch processor for all signals - improved performance
+    batch:
+      timeout: 1s
+      send_batch_size: 1024
+      send_batch_max_size: 2048
+    
+    # Memory limiter to prevent OOM - increased for multi-signal processing
+    memory_limiter:
+      limit_mib: 1024
+      spike_limit_mib: 256
+      check_interval: 1s
+    
+    # Resource detection processor
+    resourcedetection:
+      detectors: [env, system]
+      timeout: 5s
+      override: false
+    
+    # Attributes processor for consistent metadata
+    attributes:
+      actions:
+        - key: environment
+          value: "production"
+          action: upsert
+        - key: cluster.name
+          value: "eks-otel-crud"
+          action: upsert
+    
+    # Transform processor for log processing
+    transform:
+      log_statements:
+        - context: log
+          statements:
+            - set(severity_text, "INFO") where severity_text == nil
+            - set(attributes["log.source"], "otel-collector")
+
+  exporters:
+    # Export traces to Tempo (preserve existing functionality)
+    otlp/tempo:
+      endpoint: http://tempo.tracing.svc.cluster.local:4317
+      tls:
+        insecure: true
+    
+    # Export logs to Loki
+    loki:
+      endpoint: http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push
+      headers:
+        X-Scope-OrgID: "fake"
+      default_labels_enabled:
+        exporter: false
+        job: true
+    
+    # Export metrics to Prometheus
+    prometheusremotewrite:
+      endpoint: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/write
+      tls:
+        insecure: true
+    
+    # Debug exporter for troubleshooting (can be disabled in production)
+    debug:
+      verbosity: basic
+      sampling_initial: 5
+      sampling_thereafter: 200
+
+  service:
+    # Enable telemetry for the collector itself
+    telemetry:
+      logs:
+        level: "info"
+      metrics:
+        address: 0.0.0.0:8888
+    
+    pipelines:
+      # Traces pipeline (preserve existing functionality)
+      traces:
+        receivers: [otlp, jaeger]
+        processors: [memory_limiter, resourcedetection, attributes, batch]
+        exporters: [otlp/tempo, debug]
+      
+      # Metrics pipeline (new)
+      metrics:
+        receivers: [otlp, prometheus, hostmetrics]
+        processors: [memory_limiter, resourcedetection, attributes, batch]
+        exporters: [prometheusremotewrite, debug]
+      
+      # Logs pipeline (new)
+      logs:
+        receivers: [otlp]
+        processors: [memory_limiter, resourcedetection, attributes, transform, batch]
+        exporters: [loki, debug]
+
+# Service configuration (using chart defaults)
+service:
+  type: ClusterIP
+
+# Resource limits - increased for multi-signal processing
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+# Pod annotations for Prometheus scraping
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8888"
+  prometheus.io/path: "/metrics"
+
+# Environment variables for Kubernetes integration
+extraEnvs:
+  - name: KUBE_NODE_NAME
+    valueFrom:
+      fieldRef:
+        apiVersion: v1
+        fieldPath: spec.nodeName
+  - name: MY_POD_IP
+    valueFrom:
+      fieldRef:
+        apiVersion: v1
+        fieldPath: status.podIP
+
+# RBAC configuration for Kubernetes access
+serviceAccount:
+  create: true
+  name: otel-collector
+
+clusterRole:
+  create: true
+  rules:
+    - apiGroups: [""]
+      resources: ["pods", "namespaces", "nodes"]
+      verbs: ["get", "watch", "list"]
+    - apiGroups: ["apps"]
+      resources: ["replicasets", "deployments"]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: ["extensions"]
+      resources: ["replicasets", "deployments"]
+      verbs: ["get", "list", "watch"]
+
+

@@ -159,6 +159,78 @@ else
 fi
 print_success "Monitoring stack deployed"
 
+# Step 4.2: Deploy Loki for log aggregation
+print_step "Deploying Loki for log aggregation..."
+echo "Deploying Loki..."
+
+# Create logging namespace
+kubectl create namespace logging --dry-run=client -o yaml | kubectl apply -f -
+
+# Add Grafana Helm repository for Loki
+print_step "Adding Grafana Helm repository..."
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+
+# Deploy Loki
+if ! helm list -n logging 2>/dev/null | grep -q loki; then
+    if [ -f "eks-infrastructure/monitoring/loki-values.yaml" ]; then
+        print_step "Installing Loki with custom values..."
+        helm install loki grafana/loki -n logging -f eks-infrastructure/monitoring/loki-values.yaml
+    else
+        print_error "Loki values file not found! Please ensure 'loki-values.yaml' exists."
+        exit 1
+    fi
+    
+    if [ $? -eq 0 ]; then
+        print_success "Loki deployed successfully"
+    else
+        print_error "Failed to deploy Loki"
+        echo "Checking recent logs for debugging..."
+        kubectl get pods -n logging 2>/dev/null | head -10 || echo "No logging pods found"
+        exit 1
+    fi
+else
+    echo "✅ Loki already deployed, skipping"
+fi
+
+# Step 4.3: Deploy Promtail for log collection
+print_step "Deploying Promtail for log collection..."
+echo "Deploying Promtail..."
+
+# Deploy Promtail
+if ! helm list -n logging 2>/dev/null | grep -q promtail; then
+    if [ -f "eks-infrastructure/monitoring/promtail-values.yaml" ]; then
+        print_step "Installing Promtail with custom values..."
+        helm install promtail grafana/promtail -n logging -f eks-infrastructure/monitoring/promtail-values.yaml
+    else
+        print_error "Promtail values file not found! Please ensure 'promtail-values.yaml' exists."
+        exit 1
+    fi
+    
+    if [ $? -eq 0 ]; then
+        print_success "Promtail deployed successfully"
+    else
+        print_error "Failed to deploy Promtail"
+        echo "Checking recent logs for debugging..."
+        kubectl get pods -n logging 2>/dev/null | head -10 || echo "No logging pods found"
+        exit 1
+    fi
+else
+    echo "✅ Promtail already deployed, skipping"
+fi
+
+# Wait for Loki to be ready
+print_step "Waiting for Loki to be ready..."
+echo "Waiting for Loki pods to be running..."
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=loki -n logging --timeout=300s 2>/dev/null || echo "⚠️ Timeout waiting for Loki pods to be ready, continuing..."
+
+# Wait for Promtail to be ready
+print_step "Waiting for Promtail to be ready..."
+echo "Waiting for Promtail pods to be running..."
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=promtail -n logging --timeout=300s 2>/dev/null || echo "⚠️ Timeout waiting for Promtail pods to be ready, continuing..."
+
+print_success "Logging stack deployed"
+
 # Step 4.5: Deploy Grafana Tempo for distributed tracing
 print_step "Deploying Grafana Tempo for distributed tracing..."
 echo "Deploying Grafana Tempo..."
@@ -303,6 +375,9 @@ echo "Checking deployment status in all namespaces:"
 echo "Monitoring namespace:"
 kubectl get pods -n monitoring 2>/dev/null || echo "No monitoring namespace found"
 echo ""
+echo "Logging namespace:"
+kubectl get pods -n logging 2>/dev/null || echo "No logging namespace found"
+echo ""
 echo "Tracing namespace:"
 kubectl get pods -n tracing 2>/dev/null || echo "No tracing namespace found"
 echo ""
@@ -318,10 +393,13 @@ echo "- Check logs with 'kubectl logs -f deployment/app-name'"
 echo "- Monitor with 'kubectl top pods' and Grafana dashboards"
 echo "- Access ArgoCD UI with 'kubectl port-forward svc/argocd-server -n argocd 8080:443'"
 echo "- Access Grafana with 'kubectl port-forward svc/prometheus-grafana -n monitoring 3000:80'"
+echo "- Access Loki with 'kubectl port-forward svc/loki-gateway -n logging 3100:80'"
 echo "- Access Tempo with 'kubectl port-forward svc/tempo -n tracing 3100:3100'"
 echo ""
 echo "📋 Next steps:"
-echo "1. Configure your application to send traces to Tempo"
-echo "2. Set up dashboards in Grafana for monitoring"
-echo "3. Configure alerts in Prometheus AlertManager"
-echo "4. Set up your GitOps workflow with ArgoCD"
+echo "1. Configure your application to send logs to Loki via OpenTelemetry Collector"
+echo "2. Configure your application to send traces to Tempo"
+echo "3. Set up dashboards in Grafana for logs, metrics, and traces"
+echo "4. Configure alerts in Prometheus AlertManager"
+echo "5. Set up your GitOps workflow with ArgoCD"
+echo "6. Test end-to-end observability (logs, metrics, traces correlation)"

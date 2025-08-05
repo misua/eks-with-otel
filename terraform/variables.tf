@@ -65,7 +65,7 @@ variable "node_group_max_size" {
 variable "node_group_desired_size" {
   description = "Desired number of nodes in the node group"
   type        = number
-  default     = 2
+  default     = 3
 }
 
 # Storage Configuration
@@ -101,6 +101,18 @@ variable "otel_collector_chart_version" {
   default     = "0.88.0"
 }
 
+variable "loki_chart_version" {
+  description = "Version of the Loki Helm chart"
+  type        = string
+  default     = "5.41.4"
+}
+
+variable "promtail_chart_version" {
+  description = "Version of the Promtail Helm chart"
+  type        = string
+  default     = "6.15.3"
+}
+
 variable "argocd_chart_version" {
   description = "Version of the ArgoCD Helm chart"
   type        = string
@@ -119,6 +131,31 @@ variable "git_repo_url" {
   description = "Git repository URL for ArgoCD applications"
   type        = string
   default     = "https://github.com/yourusername/eks-otel-crud.git"
+}
+
+# Demo Application Configuration
+variable "deploy_demo_app" {
+  description = "Whether to deploy the demo CRUD application"
+  type        = bool
+  default     = true
+}
+
+variable "demo_app_image" {
+  description = "Docker image for the demo application"
+  type        = string
+  default     = "public.ecr.aws/docker/library/golang:1.21-alpine"
+}
+
+variable "demo_app_replicas" {
+  description = "Number of replicas for the demo application"
+  type        = number
+  default     = 2
+}
+
+variable "loadgen_replicas" {
+  description = "Number of replicas for the load generator"
+  type        = number
+  default     = 1
 }
 
 # Tags

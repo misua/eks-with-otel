@@ -1,0 +1,98 @@
+# OpenTelemetry Collector Configuration
+# Collects traces from applications and forwards to Tempo
+
+# Deployment mode - can be daemonset, deployment, or statefulset
+mode: deployment
+
+# Number of replicas for deployment mode
+replicaCount: 2
+
+# OpenTelemetry Collector configuration
+config:
+  receivers:
+    # OTLP receiver for OpenTelemetry protocol
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+    
+    # Jaeger receiver for Jaeger protocol compatibility
+    jaeger:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:14250
+        thrift_http:
+          endpoint: 0.0.0.0:14268
+        thrift_compact:
+          endpoint: 0.0.0.0:6831
+
+  processors:
+    # Batch processor to improve performance
+    batch:
+      timeout: 1s
+      send_batch_size: 1024
+    
+    # Memory limiter to prevent OOM
+    memory_limiter:
+      limit_mib: 512
+
+  exporters:
+    # Export traces to Tempo
+    otlp/tempo:
+      endpoint: http://tempo.tracing.svc.cluster.local:3200
+      tls:
+        insecure: true
+
+  service:
+    pipelines:
+      traces:
+        receivers: [otlp, jaeger]
+        processors: [memory_limiter, batch]
+        exporters: [otlp/tempo]
+
+# Service configuration
+service:
+  type: ClusterIP
+  ports:
+    otlp-grpc:
+      enabled: true
+      containerPort: 4317
+      servicePort: 4317
+      protocol: TCP
+    otlp-http:
+      enabled: true
+      containerPort: 4318
+      servicePort: 4318
+      protocol: TCP
+    jaeger-grpc:
+      enabled: true
+      containerPort: 14250
+      servicePort: 14250
+      protocol: TCP
+    jaeger-thrift-http:
+      enabled: true
+      containerPort: 14268
+      servicePort: 14268
+      protocol: TCP
+    jaeger-thrift-compact:
+      enabled: true
+      containerPort: 6831
+      servicePort: 6831
+      protocol: UDP
+
+# Resource limits
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Pod annotations for Prometheus scraping
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8888"
+  prometheus.io/path: "/metrics"
